@@ -41,6 +41,27 @@ def clean(text):
     return " ".join(str(text).split()) if text else ""
 
 
+def sourcing_filters_table(filters):
+    if not filters:
+        return "*(none defined — add at least headcount and geography)*"
+    rows = ["| Filter |", "|---|"]
+    for f in filters:
+        rows.append(f"| {clean(f)} |")
+    return "\n".join(rows)
+
+
+def sourcing_omitted(items):
+    if not items:
+        return "*(none recorded — confirm sourcing isn't quietly doing L0's job)*"
+    out = []
+    for o in items:
+        if isinstance(o, dict):
+            out.append(f"- **{clean(o.get('check', o.get('id', '?')))}** — {clean(o.get('why'))}")
+        else:
+            out.append(f"- {clean(o)}")
+    return "\n".join(out)
+
+
 def disqualify_table(checks):
     rows = ["| Check | Kill condition | Detect via |", "|---|---|---|"]
     for c in checks:
@@ -201,7 +222,14 @@ in L2 rests on it. L0, L1, L4 and L5 do not.
 ---
 """
 
+    sourcing = spec.get("sourcing", {})
     parts = [
+        fill("L-1-sourcing.md", {
+            "SOURCING_PROMPT": clean(sourcing.get("description", "")) or
+                "{{CLAUDE: write the natural-language sourcing prompt}}",
+            "SOURCING_FILTERS_TABLE": sourcing_filters_table(sourcing.get("filters", [])),
+            "SOURCING_OMITTED": sourcing_omitted(sourcing.get("deliberately_omitted", [])),
+        }),
         header,
         fill("L0-disqualification.md", {
             "DISQUALIFY_TABLE": disqualify_table(spec.get("disqualify", [])),

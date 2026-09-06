@@ -2,6 +2,34 @@ client: snyk
 offer: developer-first application security — SAST, SCA, container, and IaC scanning
 motion: sales-assisted Enterprise (net-new logos only, not self-serve Free/Team and not expansion within existing accounts)
 
+sourcing:
+  description: >
+    Find companies with an engineering or product-development function of
+    meaningful size — building and shipping their own software, not
+    purely a services or agency business. Any industry, but weight toward
+    software, fintech, healthtech, and other categories where compliance
+    or cloud-native infrastructure is common. US and international.
+  filters:
+    - 200-10,000 employees
+    - has an engineering/dev function (not pure services)
+    - any country
+  deliberately_omitted:
+    - check: competing_supply
+      why: >
+        Identifying a competing SAST/SCA/AppSec vendor (Veracode,
+        Checkmarx, Wiz) requires reading product and pricing pages —
+        L0's job, not a sourcing filter.
+    - check: existing_customer
+      why: >
+        Whether a company is already a Snyk customer isn't visible from
+        headcount or industry — it needs the case-study/press read L0
+        does, and Snyk's own telemetry should own this segment anyway.
+    - check: competitor_lockin
+      why: >
+        A public multi-year AppSec vendor agreement only shows up in
+        press releases and procurement mentions, not in a list-build
+        filter.
+
 intake:
   offer_type: readiness
   buying_event_hypothesis: >

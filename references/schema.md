@@ -6,6 +6,16 @@ One yaml file per client in `specs/`. Compiled by `scripts/compile.py`.
 client: <slug>              # used for output filename
 offer: <one line>           # what they actually sell
 
+sourcing:                   # L-1 — the Clay list-build prompt, before any column exists
+  description: >
+    One paragraph, plain English, paste-ready into Clay's "describe what
+    you'd like to do" box. Describes the companies to find.
+  filters:                  # cheap, free at list-build time — headcount,
+    - <filter>               # geography, industry, funding stage. Nothing else.
+  deliberately_omitted:     # L0 checks sourcing must NOT pre-filter on
+    - check: <L0 disqualify id>
+      why: <why sourcing has to let these through>
+
 intake:
   offer_type: readiness     # readiness | manufacturable
   buying_event_hypothesis: >
@@ -71,6 +81,15 @@ regression:                 # poison pills + expected survivors
 ```
 
 ## Notes
+
+**Sourcing filters are looser than L0 on purpose.** Only use filters
+that are free at list-build time — headcount, geography, industry,
+funding stage. Never pre-filter on anything L0 disqualifies. If sourcing
+already excludes what L0 would kill, the disqualifiers never fire, and
+there is no signal telling you whether L0 is working. Target list size
+is a few hundred to a few thousand rows; L0 should then kill 20–50% of
+it. Outside that band, suspect sourcing (too tight) or L0 (too soft)
+before touching anything else.
 
 **`excluded` matters.** Titles that are near-universal carry no signal.
 VP Engineering and CTO are excluded for Together AI. They would not be

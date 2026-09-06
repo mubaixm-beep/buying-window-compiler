@@ -6,6 +6,38 @@ motion: >-
   clusters from sales-led for reserved cluster commits, Enterprise annual
   contracts, and VPC deployments — this spec targets the sales-led side)
 
+sourcing:
+  description: >
+    Find companies that build or ship AI-powered products or features —
+    not AI infrastructure vendors themselves. Include companies with a
+    public API, a developer-facing product, or any shipped feature that
+    visibly depends on a language or generative model, from early-stage
+    startups through mid-size scale-ups. US and international, any
+    industry, headquartered anywhere. Do not restrict by funding stage or
+    whether they've raised.
+  filters:
+    - 15-10,000 employees
+    - any industry, any country
+    - excludes pure hardware/semiconductor manufacturers
+  deliberately_omitted:
+    - check: competing_supply
+      why: >
+        Whether a company sells inference/GPU/agent-runtime
+        infrastructure (Docker, Modal, CoreWeave) isn't resolvable from
+        headcount or industry tags at list-build time — it needs the L0
+        Claygent read of product and pricing pages. Filtering it out here
+        would hide whether that check is actually catching anything.
+    - check: own_fleet
+      why: >
+        "Trains on owned hardware, or is a frontier lab" requires reading
+        eng blogs and research pages — not a free-at-sourcing signal.
+    - check: hyperscaler_lockin
+      why: >
+        A multi-year cloud partnership or co-selling agreement (the
+        BlackLine case) only shows up in press releases and partner
+        pages, which is exactly what L0 exists to read instead of
+        sourcing guessing at it.
+
 intake:
   offer_type: readiness
   buying_event_hypothesis: >

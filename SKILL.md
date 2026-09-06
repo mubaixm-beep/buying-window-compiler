@@ -138,7 +138,26 @@ Push past the obvious competitor list to:
 - **Wrong size** — below the budget floor, above the procurement moat
 - **Wrong shape** — services business with no product surface
 
-### Step 5 — Write and compile the spec
+### Step 5 — Write the sourcing prompt (L-1)
+
+Write `sourcing.description`: the plain-English paragraph that gets
+pasted into Clay's "describe what you'd like to do" box to build the
+unenriched list, before any L0–L5 column exists.
+
+**Sourcing filters are looser than L0 on purpose.** Only use filters
+that are free at list-build time — headcount, geography, industry,
+funding stage. Never pre-filter on anything L0 disqualifies. If sourcing
+already excludes what L0 would kill, the disqualifiers never fire, and
+there is no way left to tell whether L0 is doing anything. A slightly
+wide list is the point.
+
+Target a few hundred to a few thousand rows. L0 should then kill
+20–50% of them — under that and sourcing is too tight, over it and L0
+is too soft (or sourcing pulled the wrong population). Record anything
+sourcing deliberately leaves for L0 to catch, and why, in
+`deliberately_omitted`.
+
+### Step 6 — Write and compile the spec
 
 Write `specs/<client>.yaml` per `references/schema.md`. Use
 `specs/together-ai.yaml` and `specs/ramp.yaml` as worked examples — they
@@ -152,7 +171,7 @@ Emits `output/<client>-build.md`. Fill the `{{CLAUDE:...}}` markers —
 Claygent prompt bodies and context fields, where template assembly can't
 do the work.
 
-### Step 6 — Hand over the hypothesis as a question
+### Step 7 — Hand over the hypothesis as a question
 
 The generated doc carries a **Discovery** section listing what was
 inferred rather than verified. Give it to the client as a question:
@@ -163,7 +182,7 @@ That question sells better than a finished answer — it shows you
 understood their motion and invites the correction that makes the spec
 real.
 
-### Step 7 — Regression and ship
+### Step 8 — Regression and ship
 
 Every spec carries a `regression` block: accounts with expected verdicts
 and the layer each should die at.
@@ -201,6 +220,7 @@ Fixed. Never edited per client. Files in `skeleton/`.
 
 | Layer | Purpose | Decays? | Confidence |
 |---|---|---|---|
+| L-1 | Sourcing — the Clay list-build prompt, before any column exists | no | high (deterministic filters) |
 | L0 | Disqualification — who can never buy | no | **high** (verifiable) |
 | L1 | Fit — who could buy, ever | no | **high** (verifiable) |
 | L2 | Window — who is buying now | **yes** | **inferred** |

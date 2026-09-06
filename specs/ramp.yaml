@@ -6,6 +6,34 @@ motion: >-
   self-serve absorbs the small end; this spec targets the segment that needs
   a rep)
 
+sourcing:
+  description: >
+    Find companies with a finance function large enough to need more than
+    spreadsheets — a Controller, VP Finance, or dedicated accounting
+    headcount already in place or clearly forming. Mid-market and
+    lower-enterprise, US-headquartered or with a substantial US entity.
+    Any industry. Include both venture-backed and bootstrapped companies.
+  filters:
+    - 50-5,000 employees
+    - US or Western Europe entity
+    - any industry
+  deliberately_omitted:
+    - check: competing_supply
+      why: >
+        Whether a company is itself a fintech, neobank, or card issuer
+        (Brex, Navan, Airbase) is a product-page read, not a filter Clay
+        can apply for free at list-build time.
+    - check: geography
+      why: >
+        "No entity in a supported country" needs company enrichment
+        against Ramp's actual coverage list, which changes — sourcing
+        uses a loose US/Western Europe filter, L0 does the precise check.
+    - check: contract_lock
+      why: >
+        A public multi-year commitment to a competing platform only
+        surfaces in case studies and logo pages; excluding it at sourcing
+        would hide whether contract_lock ever fires.
+
 intake:
   offer_type: readiness
   buying_event_hypothesis: >
