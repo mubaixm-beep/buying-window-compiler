@@ -1,0 +1,140 @@
+client: together-ai
+offer: dedicated GPU inference, fine-tuning, and open-model serving
+motion: >-
+  sales-led reserved-capacity / Enterprise (Together's own pricing splits
+  PLG/self-serve for pay-per-token serverless inference and on-demand
+  clusters from sales-led for reserved cluster commits, Enterprise annual
+  contracts, and VPC deployments — this spec targets the sales-led side)
+
+intake:
+  offer_type: readiness
+  buying_event_hypothesis: >
+    Inference costs spike, latency breaks an SLO, or a fine-tune ships
+    and needs somewhere to serve it
+  hypothesis_confidence: inferred
+  hypothesis_evidence: >
+    Category logic plus Together's own positioning around cost per token
+    and dedicated capacity. No deal data. The cost-spike version is the
+    least verifiable of the three and the most likely to be wrong.
+  signal_surface: [job_posts, github, huggingface, eng_blog, funding_news, docs]
+  window_length: 90 days
+  purchase_owner: VP Engineering / Head of ML / platform lead
+  demand_noun: inference demand
+
+discovery:
+  - Do your buyers usually arrive after a cost spike, a latency incident,
+    or a model launch? Which is most common?
+  - How long between that moment and a signed contract?
+  - Do you win more often against a hyperscaler or against self-hosting?
+
+disqualify:
+  - id: competing_supply
+    kills: sells or hosts inference, GPU capacity, or agent runtime infrastructure
+    examples: [Docker, Modal, Baseten, Replicate, Fireworks, CoreWeave, AWS, GCP, Azure]
+    detect_via: product pages, pricing pages, positioning
+  - id: own_fleet
+    kills: trains on owned hardware, or is a frontier lab
+    detect_via: eng blog, research pages, datacenter announcements
+  - id: hyperscaler_lockin
+    kills: >
+      multi-year public cloud partnership, co-selling agreement, or
+      committed enterprise spend with a provider that sells inference
+    examples: [AWS, Google Cloud, Azure, Oracle Cloud]
+    note: BlackLine is a regression example this check should catch, not a provider
+    detect_via: press releases, partner pages, cloud provider case studies
+  - id: size_band
+    kills: under 15 employees, or over 10000 employees
+    note: >
+      Floor lowered from an earlier 50-employee cut set against the
+      whole company rather than this motion. Headcount is a weak proxy
+      here specifically — unlike Ramp/Figma/Snyk, where governance and
+      procurement scale with employee count, reserved-GPU-capacity need
+      scales with inference *usage*, and a 20-person AI-native startup
+      can outspend a 500-person one. The real qualifying work is done
+      by the L1 fit conditions (model_vendor_stack, open_weight_evidence,
+      volume_proxy), not size — 15 only screens out pre-product teams
+      with nothing running yet. Ceiling unchanged: it's a backstop for
+      own_fleet, not a motion-sizing decision.
+    detect_via: company enrichment
+
+fit:
+  required: shipped_ai_feature
+  any_of:
+    - model_vendor_stack      # OpenAI, Anthropic, Pinecone, Weaviate, HF org
+    - open_weight_evidence    # Llama, Mistral, Qwen, DeepSeek, Gemma in docs/blog
+    - volume_proxy            # usage-based pricing, public API, dev-facing product
+
+window:
+  tier_a:
+    - type: job_keywords
+      tightness: tight
+      implies: >
+        A company posts jobs naming inference tooling only when it is
+        serving models in production.
+      terms: [vLLM, SGLang, TensorRT-LLM, Triton, Ray Serve, H100, H200,
+              B200, quantization, KV cache, throughput, inference latency,
+              model serving, fine-tuning]
+      lookback_days: 90
+    - type: hf_release
+      tightness: tight
+      implies: >
+        A company publishes a fine-tune only when it has training and
+        serving workloads already running.
+      note: fine-tune or open-weight model published
+      lookback_days: 90
+    - type: stated_cost_or_latency_pain
+      tightness: tight
+      implies: >
+        A company writes publicly about inference cost only when it is
+        material enough to hurt.
+      note: eng blog, conference talk, podcast, or public postmortem
+      lookback_days: 180
+    - type: funding_naming_compute
+      tightness: medium
+      implies: >
+        Naming compute in a round announcement signals earmarked spend,
+        though money can be redirected.
+      note: round announcement explicitly names compute or model training
+      lookback_days: 90
+    - type: first_infra_hire
+      tightness: medium
+      implies: >
+        A first platform hire at an API-only company usually precedes
+        bringing serving in-house.
+      note: first platform/infra role at a previously API-only company
+      lookback_days: 90
+  tier_b:
+    - type: leadership_hire
+      titles: [VP of AI, Head of Machine Learning, Director of Applied AI,
+               Chief AI Officer, Head of AI Platform]
+      excluded: [VP Engineering, CTO]   # too universal here to be causal
+      lookback_days: 90
+    - type: ai_product_ga
+      lookback_days: 90
+  tier_c:
+    - type: general_ai_hiring_volume
+    - type: headcount_growth
+
+penalty:
+  - trigger: >
+      published partnership, case study, or logo placement with a
+      competing inference provider
+    lookback_months: 6
+    points: -30
+
+scoring:
+  threshold: 55
+
+regression:
+  - account: docker.com
+    expect: DISQUALIFIED
+    at_layer: competing_supply
+    note: sells the runtime substrate agents execute inside; inference happens elsewhere
+  - account: blackline.com
+    expect: DISQUALIFIED
+    at_layer: hyperscaler_lockin
+    note: on GCP since 2019 for ML/AI capability, joint GTM since 2022
+  - account: grafana.com
+    expect: QUALIFIED
+    rationale_must_cite: model_vendor_stack
+    note: OpenAI + Anthropic + Pinecone + Weaviate in production, open-source native

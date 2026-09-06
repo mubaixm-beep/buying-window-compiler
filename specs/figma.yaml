@@ -1,0 +1,135 @@
+client: figma
+offer: collaborative product design, prototyping, and design-to-code platform
+
+intake:
+  offer_type: readiness
+  buying_event_hypothesis: >
+    A design/product org outgrows its current tooling — the tool they
+    were on is abandoned or discontinued (Adobe XD, InVision), multiple
+    disconnected tools create handoff friction that a single platform
+    resolves, or the team is scaling design headcount for the first
+    time and is choosing its toolchain now.
+  hypothesis_confidence: inferred
+  hypothesis_evidence: >
+    Figma's own published customer stories repeatedly open with one of
+    three situations before adoption or upgrade: a prior design tool
+    going into maintenance mode (Mitsubishi Electric), design work
+    spread across disconnected tools (DUOTONE, Lollypop, Chello), or
+    design operating in silos slowing delivery (Shakers, Plaid). No
+    deal data — this is pattern-matching across public case studies,
+    not a verified sales-cycle account of what happens before a
+    contract is signed.
+  signal_surface: [job_posts, careers_pages, case_studies, review_sites,
+                    eng_design_blogs, g2_reviews]
+  window_length: 60 days
+  purchase_owner: Head of Design / VP Product Design / Design Ops Lead
+  demand_noun: need for a unified design and collaboration platform
+
+discovery:
+  - Do most new logos arrive because a prior tool died (XD, InVision) or
+    because of general tool-sprawl consolidation? Which is bigger?
+  - Is the entry point usually a single design team, or does it come in
+    through an Enterprise-wide procurement motion from IT/security?
+  - How much of net-new volume is really expansion within existing
+    accounts (Professional to Organization/Enterprise) vs new logos?
+
+disqualify:
+  - id: competing_supply
+    kills: builds or sells a competing design, prototyping, or whiteboarding tool
+    examples: [Adobe, Sketch, Canva, Miro, Framer, UXPin, Penpot, Axure]
+    detect_via: product pages, pricing pages, positioning
+  - id: existing_customer
+    kills: already a Figma Organization or Enterprise customer today
+    examples: [Dropbox]
+    note: >
+      Dropbox has been a public, well-documented Figma customer since
+      2018 (Figma Blog case study, Dropbox Design's own Medium posts) —
+      not a net-new prospect, and by 2026 this check probably screens
+      out a large share of well-known tech companies given Figma's
+      ~38% category share. Confirm this doesn't gut the TAM before shipping.
+    detect_via: Figma customer/case-study pages, G2 or Capterra reviews naming the account, press
+  - id: size_floor
+    kills: under 25 employees
+    detect_via: company enrichment
+
+fit:
+  required: has_design_or_product_function
+  any_of:
+    - fragmented_design_stack   # runs 2+ of Sketch, Adobe XD, Miro, Zeplin, Canva alongside Figma-adjacent workflows
+    - ships_digital_product     # public web or mobile product surface requiring iterative UI work
+    - distributed_team          # remote or multi-office, where async design collaboration is the acute pain
+
+window:
+  tier_a:
+    - type: legacy_tool_orphaned
+      tightness: tight
+      implies: >
+        A company whose current job posts or portfolio still name a
+        discontinued or unmaintained tool (InVision, shut down entirely
+        in Jan 2025; Adobe XD, in maintenance mode with no new
+        development since 2023) has an active, unresolved tooling gap
+        it did not choose to have.
+      terms: [InVision, Adobe XD]
+      lookback_days: 90
+    - type: tool_consolidation_signal
+      tightness: tight
+      implies: >
+        A company publicly describing its design workflow as spread
+        across disconnected tools, or announcing a move to a single
+        platform, is mid-purchase-cycle for exactly this — Figma's own
+        case studies use this framing verbatim.
+      note: blog post, case study, or job post describing consolidating design tooling
+      lookback_days: 90
+    - type: design_org_scaling
+      tightness: medium
+      implies: >
+        Two or more concurrent product/UX design job openings at a
+        company with no prior dedicated design hiring usually means the
+        design practice — and its toolchain — is being stood up now.
+      lookback_days: 90
+    - type: first_design_leader_hire
+      tightness: medium
+      implies: >
+        A first Head of Design, VP Design, or Design Ops lead typically
+        audits and consolidates the team's tools within their first
+        quarter.
+      titles: [Head of Design, VP Design, VP Product Design, Design Ops Lead]
+      lookback_days: 90
+  tier_b:
+    - type: legacy_tool_job_mention
+      note: job post names Sketch or Zeplin as the current tool (alive, so weaker signal than the orphaned-tool check)
+      lookback_days: 90
+    - type: design_system_announcement
+      note: blog post or case study about launching or overhauling a design system
+      lookback_days: 90
+    - type: remote_expansion
+      note: newly distributed or multi-office team
+      lookback_days: 90
+  tier_c:
+    - type: general_design_hiring_volume
+    - type: headcount_growth
+
+penalty:
+  - trigger: >
+      published case study, testimonial, or logo placement naming a
+      competing design tool (Adobe, Sketch, Miro, Framer, Canva, UXPin,
+      Penpot) as their chosen platform
+    lookback_months: 12
+    points: -30
+
+scoring:
+  threshold: 55
+
+regression:
+  - account: sketch.com
+    expect: DISQUALIFIED
+    at_layer: competing_supply
+    note: Sketch is a direct competing design tool vendor
+  - account: dropbox.com
+    expect: DISQUALIFIED
+    at_layer: existing_customer
+    note: public Figma customer since 2018, migrated design org and design system to Figma (Figma Blog, Dropbox Design/Medium)
+  - account: deptagency.com
+    expect: QUALIFIED
+    rationale_must_cite: legacy_tool_orphaned
+    note: published their own "From Adobe XD to Figma — Navigating the Transition" account of the migration

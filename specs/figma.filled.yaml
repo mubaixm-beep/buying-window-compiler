@@ -1,0 +1,50 @@
+# Saved values for figma.yaml's {{CLAUDE:...}} judgment markers.
+# compile.py reads this automatically on every recompile — keyed by the
+# marker name used in scripts/compile.py's fill() calls. Delete a key
+# (or the whole file) to force that marker back to a blank template.
+
+L0_PROMPTS: |
+  Claygent prompts, one per check:
+
+  `competing_supply`
+  ```
+  Determine whether {{company}} meets this condition:
+  builds or sells a competing design, prototyping, or whiteboarding tool
+  (e.g. Adobe, Sketch, Canva, Miro, Framer, UXPin, Penpot, Axure)
+
+  Search: product pages, pricing pages, positioning
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `existing_customer`
+  ```
+  Determine whether {{company}} meets this condition:
+  is already a Figma Organization or Enterprise customer today (e.g. a
+  documented case study, a Figma-branded customer story, or a G2/Capterra
+  review from an employee identifying the company as a current Figma
+  customer). A single old blog post from a junior designer's portfolio
+  does not count — look for organization-level adoption.
+
+  Search: figma.com/customers, G2 and Capterra reviews naming the account, press
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `size_floor`
+  ```
+  Not a Claygent call — read directly off company enrichment (employee
+  count field). Disqualified = TRUE if headcount < 25.
+  No UNKNOWN state: missing enrichment data should pass through as FALSE,
+  same as any other L0 check with absent evidence.
+  ```
+
+CONTEXT_FIELDS: >-
+  employee headcount, industry, whether the company ships a public web
+  or mobile product, current design-tool stack mentioned in job posts or
+  portfolios (Figma, Sketch, Adobe XD, Miro, Zeplin, Canva), remote vs.
+  co-located team structure, and the L1 fit condition(s) that passed

@@ -1,0 +1,141 @@
+client: ramp
+offer: corporate cards and spend management
+motion: >-
+  sales-assisted mid-market/enterprise (Ramp's own site segments "high-intent
+  users ready to self-serve" from "larger teams that need a conversation" —
+  self-serve absorbs the small end; this spec targets the segment that needs
+  a rep)
+
+intake:
+  offer_type: readiness
+  buying_event_hypothesis: >
+    The finance function outgrows spreadsheets and manual approvals —
+    usually because someone new owns it, or because money just landed
+  hypothesis_confidence: corroborated
+  hypothesis_evidence: >
+    Repeats across Ramp's published customer stories, which commonly open
+    with a new finance leader or a post-raise scaling moment.
+  signal_surface: [funding_news, job_posts, tech_stack, press, review_sites]
+  window_length: few months
+  purchase_owner: Controller / VP Finance / CFO
+  demand_noun: spend management need
+
+discovery:
+  - Is a new finance leader really the most common entry point, or is it
+    the raise?
+  - How often do you displace an incumbent vs land where there was nothing?
+  - What size does the Amex-plus-spreadsheet setup finally break?
+
+disqualify:
+  - id: competing_supply
+    kills: fintech, neobank, spend management, or corporate card issuer
+    examples: [Brex, Navan, Expensify, Airbase, Bill.com]
+    detect_via: product and pricing pages
+  - id: geography
+    kills: no entity in a supported country
+    detect_via: company enrichment
+    note: verify current Ramp coverage before setting this
+  - id: size_floor
+    kills: under 50 employees, pre-revenue, negligible vendor spend
+    note: >
+      Raised from an earlier 15-employee floor set against Ramp's whole
+      market rather than this motion. Ramp's own site self-serves
+      "high-intent users ready to self-serve" without a rep — that
+      segment doesn't need a signal-based buying-window build, it just
+      signs up. 50 is a starting estimate for where self-serve stops
+      being sufficient; confirm the real cutoff via discovery.
+    detect_via: company enrichment
+  - id: size_ceiling
+    kills: over 5000 employees with an entrenched Concur or Amex agreement
+    detect_via: press releases, procurement mentions, case studies
+  - id: contract_lock
+    kills: public multi-year commitment to a competing platform
+    detect_via: case studies, logo pages, press
+
+fit:
+  required: finance_function_exists
+  any_of:
+    - vendor_sprawl        # 20+ detectable SaaS tools
+    - spend_velocity       # venture-backed, or revenue/headcount growing
+
+window:
+  tier_a:
+    - type: leadership_hire          # tier_a here, tier_b for together-ai
+      tightness: medium
+      implies: >
+        A new Controller or VP Finance is hired to rebuild finance
+        process, and tooling is the first thing they touch.
+      titles: [Controller, VP Finance, CFO, Head of Finance,
+               Director of Accounting]
+      lookback_days: 90
+    - type: funding_round
+      tightness: medium
+      implies: >
+        A raise creates spend that needs controls, though the money can
+        go anywhere.
+      stages: [Seed, Series A, Series B, Series C]
+      lookback_days: 90
+    - type: erp_migration
+      tightness: tight
+      implies: >
+        A company migrating to or implementing a new ERP (NetSuite, Sage
+        Intacct) is actively rebuilding its financial systems, and card
+        and spend-management decisions are typically bundled into the
+        same project or made in the same window.
+      terms: [NetSuite, Sage Intacct, QuickBooks migration, ERP implementation]
+      lookback_days: 90
+    - type: competitor_complaint
+      tightness: tight
+      implies: >
+        A public complaint about an expense tool means active
+        dissatisfaction with a named incumbent.
+      note: public negative review of current expense tool
+      lookback_days: 180
+  tier_b:
+    - type: job_keywords
+      note: >
+        moved from tier_a — generic finance-ops vocabulary (AP
+        specialist, month-end close) is routine backfill hiring at any
+        revenue-generating company; hard to write a tight or even
+        medium implies line for it, matching the generic-vocabulary
+        precedent set by snyk's devsecops_job_keywords (tier_b)
+      terms: [accounts payable, AP specialist, accounting operations,
+              procurement, expense management, month-end close]
+      lookback_days: 90
+    - type: headcount_surge
+      note: >
+        moved from tier_a — SKILL.md names headcount growth as the
+        canonical loose/tier_c example ("correlates without causing").
+        Kept as tier_b rather than folded into tier_c's
+        general_headcount_growth because the 25%-in-six-months
+        threshold is sharper than that catch-all, but it shouldn't gate
+        qualification on its own.
+      lookback_days: 90
+    - type: new_office_or_lease
+      lookback_days: 90
+    - type: new_international_entity
+      lookback_days: 90
+    - type: first_bizops_hire
+      lookback_days: 90
+  tier_c:
+    - type: general_headcount_growth
+    - type: general_hiring_volume
+
+penalty:
+  - trigger: >
+      published case study, logo placement, or press mention with Brex,
+      Navan, Expensify, or Airbase
+    lookback_months: 12
+    points: -30
+
+scoring:
+  threshold: 55
+
+regression:
+  - account: brex.com
+    expect: DISQUALIFIED
+    at_layer: competing_supply
+  - account: sap.com
+    expect: DISQUALIFIED
+    at_layer: size_ceiling
+    note: owns Concur

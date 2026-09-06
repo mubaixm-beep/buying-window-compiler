@@ -1,0 +1,76 @@
+# Saved values for ramp.yaml's {{CLAUDE:...}} judgment markers.
+# compile.py reads this automatically on every recompile — keyed by the
+# marker name used in scripts/compile.py's fill() calls. Delete a key
+# (or the whole file) to force that marker back to a blank template.
+
+L0_PROMPTS: |
+  Claygent prompts, one per check:
+
+  `competing_supply`
+  ```
+  Determine whether {{company}} meets this condition:
+  is a fintech, neobank, spend management platform, or corporate card
+  issuer (e.g. Brex, Navan, Expensify, Airbase, Bill.com)
+
+  Search: product and pricing pages
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `geography`
+  ```
+  Not a Claygent call — read directly off company enrichment (HQ and
+  entity country fields). Disqualified = TRUE if the company has no
+  entity in a country Ramp currently supports. Verify Ramp's current
+  supported-country list before wiring this up — it's the one check in
+  this spec most likely to be stale by the time it ships.
+  No UNKNOWN state: missing enrichment data should pass through as
+  FALSE, same as any other L0 check with absent evidence.
+  ```
+
+  `size_floor`
+  ```
+  Not a Claygent call — read directly off company enrichment (employee
+  count, funding stage, and revenue signal if available). Disqualified
+  = TRUE if headcount < 50, or the company is pre-revenue, or there's no
+  detectable vendor/SaaS spend to manage.
+  No UNKNOWN state: missing enrichment data should pass through as
+  FALSE, same as any other L0 check with absent evidence.
+  ```
+
+  `size_ceiling`
+  ```
+  Determine whether {{company}} meets this condition:
+  has over 5000 employees AND has an entrenched SAP Concur or Amex
+  corporate card agreement
+
+  Search: press releases, procurement mentions, case studies
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to — both the
+  headcount and the entrenched-agreement half need evidence, not just one.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `contract_lock`
+  ```
+  Determine whether {{company}} meets this condition:
+  has a public, multi-year commitment to a competing spend-management or
+  corporate card platform (e.g. Brex, Navan, Expensify, Airbase, Bill.com)
+
+  Search: case studies, logo pages, press
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to. A logo on a
+  vendor's customer page without a stated multi-year term is not enough
+  on its own — note it but return UNKNOWN rather than TRUE.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+CONTEXT_FIELDS: >-
+  employee headcount, funding stage and most recent round date,
+  industry, country/entity locations, number of detectable SaaS tools
+  in the stack (vendor sprawl), current expense/card tool if any
+  mentioned in job posts or press, and the L1 fit condition(s) that passed

@@ -1,0 +1,173 @@
+client: snyk
+offer: developer-first application security — SAST, SCA, container, and IaC scanning
+motion: sales-assisted Enterprise (net-new logos only, not self-serve Free/Team and not expansion within existing accounts)
+
+intake:
+  offer_type: readiness
+  buying_event_hypothesis: >
+    A company crosses from ad-hoc or self-serve security scanning into
+    needing a governed, sales-assisted AppSec platform — usually because
+    it is pursuing a compliance certification for the first time
+    (SOC 2, ISO 27001, PCI-DSS), it just hired a dedicated AppSec /
+    product security lead, or it has adopted AI code-generation tooling
+    fast enough that manual review can no longer keep up.
+  hypothesis_confidence: inferred
+  hypothesis_evidence: >
+    Repeats across Snyk's own published customer stories: a two-year
+    unresolved vulnerability backlog (Labelbox), 90-minute manual
+    security checks creating developer friction (TechnologyOne), scaling
+    testing automation across thousands of engineers (Spotify), and
+    exposure from AI-generated code outpacing review capacity (Relay
+    Network) — plus general category logic that regulated customers
+    (a banking case study requires every app to pass a Snyk scan before
+    production) push vendors toward formal AppSec tooling. No deal data
+    — this is pattern-matching across curated case studies, same caveat
+    as any inferred hypothesis.
+  signal_surface: [job_posts, eng_blogs, trust_compliance_pages, github_activity,
+                    funding_news, review_sites]
+  window_length: 90 days
+  purchase_owner: Head of Application Security / Product Security Lead / VP Engineering
+  demand_noun: need for automated application security coverage
+
+discovery:
+  - Is the self-serve Free/Team motion actually walled off from the
+    sales-assisted Enterprise motion, or does a meaningful share of
+    Enterprise revenue come from a Team account expanding in place —
+    which your own usage telemetry would already show, no Clay needed?
+  - Of net-new Enterprise logos, how much traces to a compliance
+    deadline versus a security incident versus just outgrowing DIY
+    scanning with no single triggering event?
+  - What's the actual size/dev-headcount floor where a prospect stops
+    self-serving on Team and needs the sales-assisted motion?
+  - Of compliance-driven deals, how many integrate into CI/CD and
+    developer workflow versus buy to pass the audit and barely touch the
+    product afterward? Is that split visible enough pre-sale to score
+    for, or only in post-sale usage data?
+
+disqualify:
+  - id: competing_supply
+    kills: builds or sells a competing SAST, SCA, or application security scanning product
+    examples: [Veracode, Checkmarx, Sonatype, Mend, GitHub, GitLab, Semgrep,
+               SonarSource, Aqua Security, JFrog, Wiz, Endor Labs]
+    detect_via: product pages, pricing pages, positioning
+  - id: existing_customer
+    kills: already a Snyk customer today (any plan) — telemetry, not Clay, should drive this segment
+    examples: [Spotify, Snowflake, Okta, Atlassian, Twilio]
+    note: >
+      These are Snyk's own published reference customers. Existing
+      accounts are exactly the segment where Snyk's product telemetry
+      (repos connected, developers active, plan-limit hits) is a
+      cheaper and tighter signal than anything external enrichment can
+      reconstruct — this build should not try to compete with that data
+      Snyk already has. See references/skill Step 1's telemetry check.
+    detect_via: snyk.io/customers, press releases, case studies, G2/Capterra reviews naming the account
+  - id: competitor_lockin
+    kills: >
+      public multi-year enterprise agreement with, or deeply embedded
+      standard-scanner deployment of, a competing AppSec vendor
+    examples: [Veracode, Checkmarx, Black Duck, SonarQube]
+    note: >
+      Distinguish from a job post that merely mentions one of these
+      tools — that's weak, ambiguous evidence (could be legacy, could be
+      one of several tools evaluated) and belongs in tier_b
+      (devsecops_job_keywords), not here. This check needs a public
+      multi-year commitment or the vendor named as their standing
+      platform in a case study, the same bar BlackLine's GCP lock-in met
+      for Together AI. Couldn't find a citable example for the
+      regression set in initial research — add one before shipping.
+    detect_via: press releases, procurement mentions, case studies, vendor partner/customer pages
+  - id: size_floor
+    kills: >
+      under 200 employees, or fewer than roughly 50 developers — this
+      motion's floor is where self-serve Free/Team plans stop being
+      sufficient and governance/procurement enters, not where the
+      product becomes technically usable
+    detect_via: company enrichment, engineering headcount on LinkedIn
+
+fit:
+  required: has_engineering_or_dev_function
+  any_of:
+    - regulated_or_compliance_driven   # finance, healthcare, gov, or a SOC2/ISO/PCI trust page
+    - cloud_native_stack               # containers/Kubernetes/IaC in production, not just VMs
+    - ai_codegen_adoption              # meaningful use of Copilot/Cursor/Claude Code/Devin etc.
+
+window:
+  tier_a:
+    - type: compliance_driver
+      tightness: tight
+      implies: >
+        A company pursuing SOC 2, ISO 27001, or PCI-DSS for the first
+        time must demonstrate a vulnerability management process to
+        pass the audit — the certification effort is the purchase
+        trigger, not a side effect of it. Tight for "will buy some
+        scanner soon" — not tight for "will actually integrate it into
+        developer workflow." A pure audit checkbox-buyer (scanner
+        purchased, never wired into CI/CD) is a real, closeable deal but
+        a weak fit for Snyk's developer-first positioning and a churn
+        risk. This tier doesn't discount for that; L5 should weigh it —
+        see CONTEXT_FIELDS.
+      note: newly published trust/security page, or a first-time SOC 2/ISO/PCI announcement
+      lookback_days: 90
+    - type: first_appsec_hire
+      tightness: tight
+      implies: >
+        A company's first dedicated Application Security or Product
+        Security hire is brought in specifically to select and own this
+        tooling — the role doesn't exist until the decision is imminent.
+      titles: [Application Security Engineer, Product Security Engineer,
+               Head of Application Security, Head of Product Security]
+      lookback_days: 90
+    - type: ai_codegen_scale_up
+      tightness: medium
+      implies: >
+        A company visibly scaling AI-assisted code generation (job
+        posts, eng blog posts about Copilot/Cursor/Claude Code adoption)
+        is expanding a code surface faster than manual review can cover,
+        though it may already have scanning in place.
+      lookback_days: 90
+    - type: cloud_native_migration
+      tightness: medium
+      implies: >
+        A first major Kubernetes or Infrastructure-as-Code rollout opens
+        a new attack surface (container images, IaC misconfig) that
+        traditional SAST-only tooling doesn't cover.
+      lookback_days: 90
+  tier_b:
+    - type: ciso_hire
+      titles: [CISO, VP Security, Chief Information Security Officer]
+      lookback_days: 90
+    - type: supply_chain_incident_reference
+      note: public post referencing response to an open-source or supply-chain vulnerability incident, without naming a vendor
+      lookback_days: 180
+    - type: devsecops_job_keywords
+      terms: [DevSecOps, shift-left security, SCA, SAST, dependency scanning]
+      lookback_days: 90
+  tier_c:
+    - type: general_security_hiring_volume
+    - type: engineering_headcount_growth
+
+penalty:
+  - trigger: >
+      published case study, testimonial, or logo placement naming a
+      competing AppSec vendor (Veracode, Checkmarx, Sonatype, Mend,
+      Semgrep, GitHub Advanced Security, SonarQube, Wiz, Aqua, Endor
+      Labs) as their chosen platform
+    lookback_months: 12
+    points: -30
+
+scoring:
+  threshold: 55
+
+regression:
+  - account: github.com
+    expect: DISQUALIFIED
+    at_layer: competing_supply
+    note: sells GitHub Advanced Security, a direct competing product
+  - account: spotify.com
+    expect: DISQUALIFIED
+    at_layer: existing_customer
+    note: published Snyk reference customer (snyk.io/customers) — telemetry, not this build, should own their expansion timing
+  - account: openbom.com
+    expect: QUALIFIED
+    rationale_must_cite: compliance_driver
+    note: press release announcing SOC 2 Type 2 achievement, a cloud PLM/BOM SaaS product with an engineering org to match

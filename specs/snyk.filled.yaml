@@ -1,0 +1,80 @@
+# Saved values for snyk.yaml's {{CLAUDE:...}} judgment markers.
+# compile.py reads this automatically on every recompile — keyed by the
+# marker name used in scripts/compile.py's fill() calls. Delete a key
+# (or the whole file) to force that marker back to a blank template.
+
+L0_PROMPTS: |
+  Claygent prompts, one per check:
+
+  `competing_supply`
+  ```
+  Determine whether {{company}} meets this condition:
+  builds or sells a competing SAST, SCA, or application security scanning
+  product (e.g. Veracode, Checkmarx, Sonatype, Mend, GitHub, GitLab,
+  Semgrep, SonarSource, Aqua Security, JFrog, Wiz, Endor Labs)
+
+  Search: product pages, pricing pages, positioning
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `existing_customer`
+  ```
+  Determine whether {{company}} meets this condition:
+  is already a Snyk customer today, on any plan (e.g. listed on
+  snyk.io/customers, named in a Snyk press release or case study, or
+  identified as a current Snyk user in a G2/Capterra review from an
+  employee). A single old job post mentioning Snyk as one tool among
+  several evaluated does not count on its own.
+
+  Search: snyk.io/customers, press releases, case studies, G2/Capterra reviews naming the account
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `competitor_lockin`
+  ```
+  Determine whether {{company}} meets this condition:
+  public multi-year enterprise agreement with, or deeply embedded
+  standard-scanner deployment of, a competing AppSec vendor (e.g.
+  Veracode, Checkmarx, Black Duck, SonarQube)
+
+  A job post merely naming one of these tools is NOT enough — that's
+  ambiguous (could be legacy, could be one of several tools in use) and
+  belongs to a different, weaker signal. Only return TRUE for a public
+  multi-year commitment or the vendor named as their standing platform
+  in a press release or case study.
+
+  Search: press releases, procurement mentions, case studies, vendor partner/customer pages
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `size_floor`
+  ```
+  Not a Claygent call — read directly off company enrichment (employee
+  count, or engineering headcount from LinkedIn if available).
+  Disqualified = TRUE if employees < 200 AND estimated developer
+  headcount < 50. No UNKNOWN state: missing enrichment data should pass
+  through as FALSE, same as any other L0 check with absent evidence.
+  ```
+
+CONTEXT_FIELDS: >-
+  employee and engineering headcount, industry (flag regulated:
+  finance/healthcare/gov), whether a SOC 2/ISO 27001/PCI trust page
+  exists and how recently it appeared, current AppSec tooling mentioned
+  in job posts or case studies (if any), cloud-native stack evidence
+  (Kubernetes, Terraform, container registries), AI codegen tooling in
+  use, the L1 fit condition(s) that passed, and — where the strongest
+  signal is compliance_driver — any evidence of developer-workflow
+  depth (CI/CD integration mentions, IDE/dev-tool adoption, an
+  engineering blog at all) versus compliance-only framing (a trust page
+  update with no matching engineering-side signal), since audit-driven
+  buyers who never integrate the tool are a real deal but a weak fit for
+  developer-first positioning

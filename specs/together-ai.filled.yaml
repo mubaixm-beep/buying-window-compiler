@@ -1,0 +1,61 @@
+# Saved values for together-ai.yaml's {{CLAUDE:...}} judgment markers.
+# compile.py reads this automatically on every recompile — keyed by the
+# marker name used in scripts/compile.py's fill() calls. Delete a key
+# (or the whole file) to force that marker back to a blank template.
+
+L0_PROMPTS: |
+  Claygent prompts, one per check:
+
+  `competing_supply`
+  ```
+  Determine whether {{company}} meets this condition:
+  sells or hosts inference, GPU capacity, or agent runtime infrastructure
+  (e.g. Docker, Modal, Baseten, Replicate, Fireworks, CoreWeave, AWS, GCP, Azure)
+
+  Search: product pages, pricing pages, positioning
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `own_fleet`
+  ```
+  Determine whether {{company}} meets this condition:
+  trains on owned hardware, or is a frontier lab
+
+  Search: eng blog, research pages, datacenter announcements
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `hyperscaler_lockin`
+  ```
+  Determine whether {{company}} meets this condition:
+  multi-year public cloud partnership, co-selling agreement, or committed
+  enterprise spend with a provider that sells inference (e.g. AWS, Google
+  Cloud, Azure, Oracle Cloud)
+
+  Search: press releases, partner pages, cloud provider case studies
+
+  Return only: TRUE, FALSE, or UNKNOWN.
+  Return TRUE only with a specific source you can point to.
+  Return UNKNOWN when evidence is absent rather than guessing FALSE.
+  ```
+
+  `size_band`
+  ```
+  Not a Claygent call — read directly off company enrichment (employee
+  count field). Disqualified = TRUE if headcount < 50 OR headcount > 10000.
+  No UNKNOWN state: missing enrichment data should pass through as FALSE,
+  same as any other L0 check with absent evidence.
+  ```
+
+CONTEXT_FIELDS: >-
+  employee headcount, industry, primary cloud provider, model vendor stack
+  (OpenAI / Anthropic / Pinecone / Weaviate / HF org named, if any),
+  open-weight model evidence (Llama / Mistral / Qwen / DeepSeek / Gemma in
+  docs or blog, if any), product surface (usage-based API or dev-facing
+  product, if any), and the L1 fit condition(s) that passed
