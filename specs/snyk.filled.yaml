@@ -1,69 +1,131 @@
-# Saved values for snyk.yaml's {{CLAUDE:...}} judgment markers.
-# compile.py reads this automatically on every recompile — keyed by the
-# marker name used in scripts/compile.py's fill() calls. Delete a key
-# (or the whole file) to force that marker back to a blank template.
+# Hand-authored per-column build content for snyk.yaml.
+# compile.py reads this automatically on every recompile, keyed by
+# check/fit-condition id under l0/l1, plus top-level markers (like
+# CONTEXT_FIELDS) for slots the templates can't fill deterministically.
+# Delete a key to force that column back to a {{CLAUDE:...}} marker.
 
-L0_PROMPTS: |
-  Claygent prompts, one per check:
+l0:
+  headcount_contraction:
+    inputs: /Headcount Growth 12mo
+    body: /Headcount Growth 12mo <= 0
 
-  `competing_supply`
-  ```
-  Determine whether {{company}} meets this condition:
-  builds or sells a competing SAST, SCA, or application security scanning
-  product (e.g. Veracode, Checkmarx, Sonatype, Mend, GitHub, GitLab,
-  Semgrep, SonarSource, Aqua Security, JFrog, Wiz, Endor Labs)
+  size_floor:
+    inputs: /Employee Count, /Engineering Headcount
+    body: |
+      Disqualified = TRUE if employees < 200 AND estimated developer
+      headcount < 50. No UNKNOWN state: missing enrichment data should
+      pass through as FALSE, same as any other L0 check with absent
+      evidence.
 
-  Search: product pages, pricing pages, positioning
+  existing_customer:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      is already a Snyk customer today, on any plan (e.g. listed on
+      snyk.io/customers, named in a Snyk press release or case study, or
+      identified as a current Snyk user in a G2/Capterra review from an
+      employee). A single old job post mentioning Snyk as one tool among
+      several evaluated does not count on its own.
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Search: snyk.io/customers, press releases, case studies, G2/Capterra reviews naming the account
 
-  `existing_customer`
-  ```
-  Determine whether {{company}} meets this condition:
-  is already a Snyk customer today, on any plan (e.g. listed on
-  snyk.io/customers, named in a Snyk press release or case study, or
-  identified as a current Snyk user in a G2/Capterra review from an
-  employee). A single old job post mentioning Snyk as one tool among
-  several evaluated does not count on its own.
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
-  Search: snyk.io/customers, press releases, case studies, G2/Capterra reviews naming the account
+  competing_supply:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      builds or sells a competing SAST, SCA, or application security scanning
+      product (e.g. Veracode, Checkmarx, Sonatype, Mend, GitHub, GitLab,
+      Semgrep, SonarSource, Aqua Security, JFrog, Wiz, Endor Labs)
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Search: product pages, pricing pages, positioning
 
-  `competitor_lockin`
-  ```
-  Determine whether {{company}} meets this condition:
-  public multi-year enterprise agreement with, or deeply embedded
-  standard-scanner deployment of, a competing AppSec vendor (e.g.
-  Veracode, Checkmarx, Black Duck, SonarQube)
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
-  A job post merely naming one of these tools is NOT enough — that's
-  ambiguous (could be legacy, could be one of several tools in use) and
-  belongs to a different, weaker signal. Only return TRUE for a public
-  multi-year commitment or the vendor named as their standing platform
-  in a press release or case study.
+  competitor_lockin:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      public multi-year enterprise agreement with, or deeply embedded
+      standard-scanner deployment of, a competing AppSec vendor (e.g.
+      Veracode, Checkmarx, Black Duck, SonarQube)
 
-  Search: press releases, procurement mentions, case studies, vendor partner/customer pages
+      A job post merely naming one of these tools is NOT enough — that's
+      ambiguous (could be legacy, could be one of several tools evaluated)
+      and belongs to a different, weaker signal. Only return TRUE for a
+      public multi-year commitment or the vendor named as their standing
+      platform in a press release or case study.
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Search: press releases, procurement mentions, case studies, vendor partner/customer pages
 
-  `size_floor`
-  ```
-  Not a Claygent call — read directly off company enrichment (employee
-  count, or engineering headcount from LinkedIn if available).
-  Disqualified = TRUE if employees < 200 AND estimated developer
-  headcount < 50. No UNKNOWN state: missing enrichment data should pass
-  through as FALSE, same as any other L0 check with absent evidence.
-  ```
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+l1:
+  has_engineering_or_dev_function:
+    cost: cheap
+    inputs: /Description, /Job Titles
+    summary: Builds and ships its own software — an engineering/dev function exists, not a pure services business.
+    body: |
+      Classify from {{Company Name}}'s company description and any
+      visible job titles: does an engineering or product-development
+      function exist (builds and ships its own software, not purely a
+      services or agency business)? Not a search — use what enrichment
+      already has.
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return UNKNOWN only if there's genuinely not enough information to tell.
+
+  regulated_or_compliance_driven:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: In finance, healthcare, or government, or has a published SOC 2/ISO 27001/PCI trust page.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      is in finance, healthcare, or government, or has a published
+      SOC 2 / ISO 27001 / PCI trust page.
+
+      Search: trust/security page, industry classification, compliance pages
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  cloud_native_stack:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Runs containers, Kubernetes, or IaC in production — not just VMs.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      runs containers, Kubernetes, or Infrastructure-as-Code in
+      production — not just VMs.
+
+      Search: eng blog, job posts, careers page tech-stack mentions
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  ai_codegen_adoption:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Meaningful use of AI code-generation tooling (Copilot, Cursor, Claude Code, Devin, or similar).
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      shows meaningful use of AI code-generation tooling (Copilot,
+      Cursor, Claude Code, Devin, or similar).
+
+      Search: job posts, eng blog, conference talks
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
 CONTEXT_FIELDS: >-
   employee and engineering headcount, industry (flag regulated:
@@ -78,3 +140,19 @@ CONTEXT_FIELDS: >-
   update with no matching engineering-side signal), since audit-driven
   buyers who never integrate the tool are a real deal but a weak fit for
   developer-first positioning
+
+OFFER_TYPE_REASONING: >-
+  A company crosses into needing sales-assisted AppSec
+  because of a compliance deadline, a first AppSec hire, or an
+  AI-codegen scale-up, not because of Snyk's pitch. Serves net-new
+  Enterprise logos only — not self-serve Free/Team, and not expansion
+  within existing accounts.
+
+SCOPE_EXCLUSIONS: |-
+  - Self-serve Free/Team accounts — absorbed below the 200-employee
+    floor, not this spec.
+  - Expansion within existing accounts — Snyk's own product telemetry
+    should own that timing, not external enrichment (see L0
+    `existing_customer`).
+  - Companies under 200 employees / ~50 developers (see L0
+    `size_floor`).

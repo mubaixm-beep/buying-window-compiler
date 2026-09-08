@@ -1,50 +1,125 @@
-# Saved values for figma.yaml's {{CLAUDE:...}} judgment markers.
-# compile.py reads this automatically on every recompile — keyed by the
-# marker name used in scripts/compile.py's fill() calls. Delete a key
-# (or the whole file) to force that marker back to a blank template.
+# Hand-authored per-column build content for figma.yaml.
+# compile.py reads this automatically on every recompile, keyed by
+# check/fit-condition id under l0/l1, plus top-level markers (like
+# CONTEXT_FIELDS) for slots the templates can't fill deterministically.
+# Delete a key to force that column back to a {{CLAUDE:...}} marker.
 
-L0_PROMPTS: |
-  Claygent prompts, one per check:
+l0:
+  headcount_contraction:
+    inputs: /Headcount Growth 12mo
+    body: /Headcount Growth 12mo <= 0
 
-  `competing_supply`
-  ```
-  Determine whether {{company}} meets this condition:
-  builds or sells a competing design, prototyping, or whiteboarding tool
-  (e.g. Adobe, Sketch, Canva, Miro, Framer, UXPin, Penpot, Axure)
+  size_floor:
+    inputs: /Employee Count
+    body: /Employee Count < 25
 
-  Search: product pages, pricing pages, positioning
+  existing_customer:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      is already a Figma Organization or Enterprise customer today (e.g. a
+      documented case study, a Figma-branded customer story, or a G2/Capterra
+      review from an employee identifying the company as a current Figma
+      customer). A single old blog post from a junior designer's portfolio
+      does not count — look for organization-level adoption.
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Search: figma.com/customers, G2 and Capterra reviews naming the account, press
 
-  `existing_customer`
-  ```
-  Determine whether {{company}} meets this condition:
-  is already a Figma Organization or Enterprise customer today (e.g. a
-  documented case study, a Figma-branded customer story, or a G2/Capterra
-  review from an employee identifying the company as a current Figma
-  customer). A single old blog post from a junior designer's portfolio
-  does not count — look for organization-level adoption.
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
-  Search: figma.com/customers, G2 and Capterra reviews naming the account, press
+  competing_supply:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      builds or sells a competing design, prototyping, or whiteboarding tool
+      (e.g. Adobe, Sketch, Canva, Miro, Framer, UXPin, Penpot, Axure)
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Search: product pages, pricing pages, positioning
 
-  `size_floor`
-  ```
-  Not a Claygent call — read directly off company enrichment (employee
-  count field). Disqualified = TRUE if headcount < 25.
-  No UNKNOWN state: missing enrichment data should pass through as FALSE,
-  same as any other L0 check with absent evidence.
-  ```
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+l1:
+  has_design_or_product_function:
+    cost: cheap
+    inputs: /Description, /Job Titles
+    summary: At least one Design, Product Design, or UX titled role exists.
+    body: |
+      Classify from {{Company Name}}'s company description and any
+      visible job titles: does a dedicated design or product-design
+      function exist (at least one Design, Product Design, or UX
+      titled role)? Not a search — use what enrichment already has.
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return UNKNOWN only if there's genuinely not enough information to tell.
+
+  fragmented_design_stack:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Runs 2+ of Sketch, Adobe XD, Miro, Zeplin, or Canva alongside Figma-adjacent workflows.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      runs 2 or more of Sketch, Adobe XD, Miro, Zeplin, or Canva alongside
+      Figma-adjacent design workflows.
+
+      Search: job posts naming tools, tech-stack detection, case studies
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  ships_digital_product:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Has a public web or mobile product surface requiring iterative UI work.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      has a public web or mobile product surface requiring iterative UI
+      work (not just a marketing site).
+
+      Search: app stores, product pages, product screenshots
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  distributed_team:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Remote or multi-office, where async design collaboration is the acute pain.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      is remote or multi-office, where async design collaboration is the
+      acute pain.
+
+      Search: careers page, job posts, LinkedIn office locations
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
 CONTEXT_FIELDS: >-
   employee headcount, industry, whether the company ships a public web
   or mobile product, current design-tool stack mentioned in job posts or
   portfolios (Figma, Sketch, Adobe XD, Miro, Zeplin, Canva), remote vs.
   co-located team structure, and the L1 fit condition(s) that passed
+
+OFFER_TYPE_REASONING: >-
+  For the sales-assisted Organization/Enterprise motion — a design org
+  outgrows its tooling because of an external event (a tool
+  dying, fragmentation, first design-org scaling), not because of
+  Figma's pitch. The self-serve Professional motion is manufacturable
+  instead — a designer tries it and it spreads with no external trigger
+  — and is entirely out of scope here.
+
+SCOPE_EXCLUSIONS: |-
+  - The self-serve Professional motion — manufacturable, not readiness;
+    out of scope entirely (see Offer type above).
+  - Companies already on Figma Organization/Enterprise (see L0
+    `existing_customer`) — by 2026 this probably screens out a large
+    share of well-known tech companies given Figma's ~38% category
+    share; confirm this doesn't gut the TAM before shipping.
+  - Companies under 25 employees (see L0 `size_floor`).

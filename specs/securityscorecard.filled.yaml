@@ -1,0 +1,211 @@
+# Hand-authored per-column build content for securityscorecard.yaml.
+# compile.py reads this automatically on every recompile, keyed by
+# check/fit-condition id under l0/l1, plus top-level markers (like
+# CONTEXT_FIELDS) for slots the templates can't fill deterministically.
+# Delete a key to force that column back to a {{CLAUDE:...}} marker.
+
+l0:
+  headcount_contraction:
+    inputs: /Headcount Growth 12mo
+    body: /Headcount Growth 12mo <= 0
+
+  size_floor:
+    inputs: /Employee Count, /Industry, /Company Type
+    body: |
+      Disqualified = TRUE if:
+        /Employee Count < 500 AND NOT (regulated industry OR /Company Type = "Public"), OR
+        /Employee Count < 100 AND (regulated industry OR /Company Type = "Public"), OR
+        /Employee Count > 10000
+      Regulated industry = financial services, healthcare, insurance, or
+      critical infrastructure. No UNKNOWN state: missing enrichment data
+      should pass through as FALSE, same as any other L0 check with
+      absent evidence.
+
+  wrong_shape:
+    inputs: /Description
+    body: |
+      Not a search — classify from {{Company Name}}'s existing company
+      description alone, no external lookup needed.
+      Disqualified = TRUE if the company is a professional or trade
+      association, a standards organization, a multilateral or
+      intergovernmental body, a government agency, or a
+      university/academic institution.
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return UNKNOWN only if the description genuinely doesn't say enough
+      to classify entity type at all — not as a substitute for FALSE.
+
+  existing_customer:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      is already a SecurityScorecard customer today (e.g. named on
+      securityscorecard.com's case-study or customer-stories pages, named in
+      a SecurityScorecard press release, or identified as a current user in
+      a G2 review from an employee).
+
+      Search: securityscorecard.com case studies and customer-stories pages, press releases, G2 reviews naming the account
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  competing_supply:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      builds or sells a competing security-ratings or third-party risk
+      management platform (e.g. BitSight, UpGuard, Panorays, Black Kite,
+      ProcessUnity, Prevalent, CyberGRX, Venminder, RiskRecon)
+
+      Search: product pages, pricing pages, positioning
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  competitor_lockin:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      public multi-year enterprise agreement with, or deeply embedded
+      standard platform of, a competing ratings/TPRM vendor (e.g. BitSight,
+      UpGuard, Panorays, ProcessUnity)
+
+      A job post merely naming one of these tools is NOT enough — that's
+      ambiguous (could be legacy, could be one of several tools evaluated)
+      and belongs to a different, weaker signal. Only return TRUE for a
+      public multi-year commitment or the vendor named as their standing
+      platform in a press release or case study.
+
+      Auto-generated security-ratings pages, scorecard directories, and
+      profile aggregators do NOT count on their own — e.g. a
+      bitsight.com/company/<name> or upguard.com/security-report/<name>
+      URL. These vendors publish ratings on companies unilaterally, with
+      no customer relationship; being rated is the opposite of being a
+      customer. Only a case study, press release, or logo placement
+      naming the vendor as the company's chosen platform counts.
+
+      Search: press releases, procurement mentions, case studies, vendor customer/partner pages — NOT the vendor's own auto-generated ratings/scorecard/profile pages
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+l1:
+  publishes_vendor_governance_artifact:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Publishes a vendor security page, trust center, supplier code of conduct, supplier portal, or names third-party risk in a 10-K.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      publishes a vendor security page, a trust center, a supplier code
+      of conduct, a supplier portal, or names third-party/vendor risk
+      oversight in a 10-K or other public filing.
+
+      Search: company trust/security-center page, "suppliers" or
+      "vendors" pages, procurement/supplier-portal pages, investor
+      relations or SEC filings (10-K risk factors, proxy statement) if
+      the company is public
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+    note: >
+      Replaces has_vendor_or_supply_chain_exposure, which asked whether
+      the business "relies on material third-party vendors" — true of
+      nearly every company over 500 employees, and answerable from no
+      public page. Sandboxed on 10 rows: it returned UNKNOWN on every
+      single one, so Fit = false everywhere and nothing could ever
+      qualify — the check was asking a question no page answers, the
+      same failure mode wrong_shape's original framing had. This
+      version is testable, but trades away recall on the segment
+      SecurityScorecard should want most: a company with zero
+      vendor-governance artifacts published yet is arguably the
+      freshest prospect, not a disqualified one, and this required condition
+      will return FALSE/UNKNOWN for exactly that company. Watch the
+      qualified rate after this fix — if it's too low, this floor may
+      need to loosen to an industry-based heuristic instead of an
+      artifact search.
+
+  regulated_industry:
+    cost: cheap
+    inputs: /Industry
+    summary: Financial services, healthcare, insurance, or critical infrastructure (energy, utilities, telecom).
+    body: |
+      Classify from {{Company Name}}'s industry field alone: financial
+      services, healthcare, insurance, or critical infrastructure
+      (energy, utilities, telecommunications)? Not a search — reads the
+      same industry field size_floor already uses.
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+
+  large_vendor_ecosystem:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Runs 100+ detectable SaaS/cloud vendors, or a complex multi-tier physical supply chain.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      runs 100+ detectable SaaS/cloud vendors, or a complex multi-tier
+      physical supply chain.
+
+      Search: tech-stack detection tools (BuiltWith, Enlyft), job posts
+      naming tools, supply-chain/procurement pages
+
+      Return only: TRUE, FALSE, or UNKNOWN — never a URL and never a raw
+      number as the answer itself. If a tech-stack tool returns a vendor
+      count, translate it: TRUE if 100 or more, FALSE if clearly under,
+      UNKNOWN if the tool has no data for this company. Put the source
+      URL in a separate source/notes field, not in place of the
+      TRUE/FALSE/UNKNOWN answer.
+      Return TRUE only with a specific source or count you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+    note: >
+      Sandboxed on 10 rows: this column returned a bare URL
+      (builtwith.com/..., enlyft.com/..., crunchbase.com/...) as the
+      answer on every row instead of a TRUE/FALSE/UNKNOWN call — the
+      Clay column was passing through the tool's citation instead of
+      evaluating it. The fix is in the prompt, not the check's logic:
+      it now says explicitly not to return a URL or count as the
+      answer.
+
+  public_company:
+    cost: free
+    inputs: /Company Type
+    summary: Publicly traded — SEC cyber disclosure rules cover material third-party incidents.
+    body: /Company Type = "Public"
+
+CONTEXT_FIELDS: >-
+  employee count, industry (flag regulated:
+  finance/healthcare/insurance/critical infrastructure/public company), whether a
+  DORA/NYDFS/SEC compliance page or program was recently published,
+  any breach or incident naming a third-party/vendor as the source and
+  its disclosure date, current TPRM/ratings tooling mentioned in job
+  posts or press (if any), the L1 fit condition(s) that passed, and —
+  where the strongest signal is regulatory_deadline — whether the
+  company has shown any prior vendor-risk activity at all (an existing,
+  informal program tightening up) versus standing one up from zero,
+  since a from-zero program is a longer, more consultative sale than a
+  program upgrade
+
+OFFER_TYPE_REASONING: >-
+  A company formalizes third-party risk oversight because a
+  regulator or a vendor-caused breach forces the issue, not because
+  SecurityScorecard's pitch creates the need. Serves the paid,
+  sales-led platform for net-new logos only, not the free self-serve
+  scorecard-lookup motion or existing accounts expanding seats.
+
+SCOPE_EXCLUSIONS: |-
+  - The free instant scorecard-lookup motion — self-serve lead-gen, not
+    this spec.
+  - Existing SecurityScorecard customers (see L0 `existing_customer`) —
+    Truist, Hershey, ADT, PayPoint, KION Group, Clyde, Solarig, CEDIA are
+    published references.
+  - Companies over 10,000 employees, or under the regulated/public-vs-
+    general size floor (see L0 `size_floor`) — the largest published
+    references (Truist ~40k, KION ~42k, Hershey ~18k, ADT ~15k) sit well
+    above the 10,000 ceiling on purpose, aiming sourcing at the next
+    tier down instead of where SecurityScorecard's own base concentrates.
+  - Entity types with no signal-based buying motion — professional/trade
+    associations, standards bodies, multilaterals, government agencies,
+    universities (see L0 `wrong_shape`).

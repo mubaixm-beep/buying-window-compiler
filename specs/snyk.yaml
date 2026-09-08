@@ -3,16 +3,27 @@ offer: developer-first application security — SAST, SCA, container, and IaC sc
 motion: sales-assisted Enterprise (net-new logos only, not self-serve Free/Team and not expansion within existing accounts)
 
 sourcing:
-  description: >
-    Find companies with an engineering or product-development function of
-    meaningful size — building and shipping their own software, not
-    purely a services or agency business. Any industry, but weight toward
-    software, fintech, healthtech, and other categories where compliance
-    or cloud-native infrastructure is common. US and international.
-  filters:
-    - 200-10,000 employees
-    - has an engineering/dev function (not pure services)
-    - any country
+  # Single segment — no OR branches needed here.
+  segments:
+    - name: engineering_orgs
+      description: >
+        Companies with 200-5,000 employees in the Software, SaaS,
+        Fintech, Healthtech, Cybersecurity, or Cloud Infrastructure
+        industries. Any country. Exclude the Staffing, BPO, and IT
+        Services industries.
+      filters:
+        - 200-5,000 employees
+        - "industry: Software, SaaS, Fintech, Healthtech, Cybersecurity, or Cloud Infrastructure"
+        - any country
+        - excludes Staffing, BPO, and IT Services industries
+      # Ceiling lowered from L0's own size_floor-only band (no ceiling
+      # was ever set) to 5,000. existing_customer's named references —
+      # Spotify (~9,800), Snowflake (~7,600), Atlassian (~11,000),
+      # Twilio (~5,000), Okta (~6,000) — concentrate in the
+      # 5,000-11,000-employee band. A ceiling at 10,000 would have
+      # resourced straight into that concentration; 5,000 aims below it
+      # toward net-new mid-market and lower-enterprise accounts instead.
+      expected_row_count: 1,500-3,000
   deliberately_omitted:
     - check: competing_supply
       why: >
@@ -73,14 +84,27 @@ discovery:
     for, or only in post-sale usage data?
 
 disqualify:
-  - id: competing_supply
-    kills: builds or sells a competing SAST, SCA, or application security scanning product
-    examples: [Veracode, Checkmarx, Sonatype, Mend, GitHub, GitLab, Semgrep,
-               SonarSource, Aqua Security, JFrog, Wiz, Endor Labs]
-    detect_via: product pages, pricing pages, positioning
+  - id: headcount_contraction
+    kills: 12-month headcount growth <= 0%
+    cost: free
+    note: >
+      Same Enrich Company call that returns employee count also returns
+      12-month growth — free once enrichment is already running. A
+      company shedding headcount is very likely under a procurement
+      freeze regardless of offer.
+    detect_via: company enrichment (Enrich Company payload)
+  - id: size_floor
+    kills: >
+      under 200 employees, or fewer than roughly 50 developers — this
+      motion's floor is where self-serve Free/Team plans stop being
+      sufficient and governance/procurement enters, not where the
+      product becomes technically usable
+    cost: free
+    detect_via: company enrichment, engineering headcount on LinkedIn
   - id: existing_customer
     kills: already a Snyk customer today (any plan) — telemetry, not Clay, should drive this segment
     examples: [Spotify, Snowflake, Okta, Atlassian, Twilio]
+    cost: search
     note: >
       These are Snyk's own published reference customers. Existing
       accounts are exactly the segment where Snyk's product telemetry
@@ -88,12 +112,21 @@ disqualify:
       cheaper and tighter signal than anything external enrichment can
       reconstruct — this build should not try to compete with that data
       Snyk already has. See references/skill Step 1's telemetry check.
+      Narrow search against a known list — ordered before the broad
+      searches below.
     detect_via: snyk.io/customers, press releases, case studies, G2/Capterra reviews naming the account
+  - id: competing_supply
+    kills: builds or sells a competing SAST, SCA, or application security scanning product
+    examples: [Veracode, Checkmarx, Sonatype, Mend, GitHub, GitLab, Semgrep,
+               SonarSource, Aqua Security, JFrog, Wiz, Endor Labs]
+    cost: search
+    detect_via: product pages, pricing pages, positioning
   - id: competitor_lockin
     kills: >
       public multi-year enterprise agreement with, or deeply embedded
       standard-scanner deployment of, a competing AppSec vendor
     examples: [Veracode, Checkmarx, Black Duck, SonarQube]
+    cost: search
     note: >
       Distinguish from a job post that merely mentions one of these
       tools — that's weak, ambiguous evidence (could be legacy, could be
@@ -104,13 +137,6 @@ disqualify:
       for Together AI. Couldn't find a citable example for the
       regression set in initial research — add one before shipping.
     detect_via: press releases, procurement mentions, case studies, vendor partner/customer pages
-  - id: size_floor
-    kills: >
-      under 200 employees, or fewer than roughly 50 developers — this
-      motion's floor is where self-serve Free/Team plans stop being
-      sufficient and governance/procurement enters, not where the
-      product becomes technically usable
-    detect_via: company enrichment, engineering headcount on LinkedIn
 
 fit:
   required: has_engineering_or_dev_function

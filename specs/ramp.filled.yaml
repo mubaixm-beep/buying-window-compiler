@@ -1,76 +1,136 @@
-# Saved values for ramp.yaml's {{CLAUDE:...}} judgment markers.
-# compile.py reads this automatically on every recompile — keyed by the
-# marker name used in scripts/compile.py's fill() calls. Delete a key
-# (or the whole file) to force that marker back to a blank template.
+# Hand-authored per-column build content for ramp.yaml.
+# compile.py reads this automatically on every recompile, keyed by
+# check/fit-condition id under l0/l1, plus top-level markers (like
+# CONTEXT_FIELDS) for slots the templates can't fill deterministically.
+# Delete a key to force that column back to a {{CLAUDE:...}} marker.
 
-L0_PROMPTS: |
-  Claygent prompts, one per check:
+l0:
+  headcount_contraction:
+    inputs: /Headcount Growth 12mo
+    body: /Headcount Growth 12mo <= 0
 
-  `competing_supply`
-  ```
-  Determine whether {{company}} meets this condition:
-  is a fintech, neobank, spend management platform, or corporate card
-  issuer (e.g. Brex, Navan, Expensify, Airbase, Bill.com)
+  geography:
+    inputs: /Country, /Entity Countries
+    body: |
+      Disqualified = TRUE if the company has no entity in a country Ramp
+      currently supports. Verify Ramp's current supported-country list
+      before wiring this up — it's the one check in this spec most
+      likely to be stale by the time it ships.
+      No UNKNOWN state: missing enrichment data should pass through as
+      FALSE, same as any other L0 check with absent evidence.
 
-  Search: product and pricing pages
+  size_floor:
+    inputs: /Employee Count, /Funding Stage, /Revenue Signal
+    body: |
+      Disqualified = TRUE if headcount < 50, or the company is
+      pre-revenue, or there's no detectable vendor/SaaS spend to manage.
+      No UNKNOWN state: missing enrichment data should pass through as
+      FALSE, same as any other L0 check with absent evidence.
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+  size_ceiling:
+    inputs: /Company Name, /Website, /Employee Count
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      has over 5000 employees AND has an entrenched SAP Concur or Amex
+      corporate card agreement
 
-  `geography`
-  ```
-  Not a Claygent call — read directly off company enrichment (HQ and
-  entity country fields). Disqualified = TRUE if the company has no
-  entity in a country Ramp currently supports. Verify Ramp's current
-  supported-country list before wiring this up — it's the one check in
-  this spec most likely to be stale by the time it ships.
-  No UNKNOWN state: missing enrichment data should pass through as
-  FALSE, same as any other L0 check with absent evidence.
-  ```
+      Search: press releases, procurement mentions, case studies
 
-  `size_floor`
-  ```
-  Not a Claygent call — read directly off company enrichment (employee
-  count, funding stage, and revenue signal if available). Disqualified
-  = TRUE if headcount < 50, or the company is pre-revenue, or there's no
-  detectable vendor/SaaS spend to manage.
-  No UNKNOWN state: missing enrichment data should pass through as
-  FALSE, same as any other L0 check with absent evidence.
-  ```
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to — both the
+      headcount and the entrenched-agreement half need evidence, not just one.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
-  `size_ceiling`
-  ```
-  Determine whether {{company}} meets this condition:
-  has over 5000 employees AND has an entrenched SAP Concur or Amex
-  corporate card agreement
+  competing_supply:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      is a fintech, neobank, spend management platform, or corporate card
+      issuer (e.g. Brex, Navan, Expensify, Airbase, Bill.com)
 
-  Search: press releases, procurement mentions, case studies
+      Search: product and pricing pages
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to — both the
-  headcount and the entrenched-agreement half need evidence, not just one.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
-  `contract_lock`
-  ```
-  Determine whether {{company}} meets this condition:
-  has a public, multi-year commitment to a competing spend-management or
-  corporate card platform (e.g. Brex, Navan, Expensify, Airbase, Bill.com)
+  contract_lock:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      has a public, multi-year commitment to a competing spend-management or
+      corporate card platform (e.g. Brex, Navan, Expensify, Airbase, Bill.com)
 
-  Search: case studies, logo pages, press
+      Search: case studies, logo pages, press
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to. A logo on a
-  vendor's customer page without a stated multi-year term is not enough
-  on its own — note it but return UNKNOWN rather than TRUE.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to. A logo on a
+      vendor's customer page without a stated multi-year term is not enough
+      on its own — note it but return UNKNOWN rather than TRUE.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+l1:
+  finance_function_exists:
+    cost: cheap
+    inputs: /Description, /Job Titles
+    summary: A finance/accounting function exists (Controller, VP Finance, accounting team), even a small one.
+    body: |
+      Classify from {{Company Name}}'s company description and any
+      visible job titles: does a finance/accounting function exist
+      (Controller, VP Finance, accounting team, or equivalent), even if
+      small? Not a search — use what enrichment already has.
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return UNKNOWN only if there's genuinely not enough information to tell.
+
+  vendor_sprawl:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Runs 20+ detectable SaaS tools.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      runs 20 or more detectable SaaS tools (via tech-stack/BuiltWith-style
+      detection or job-post tooling mentions).
+
+      Search: tech-stack detection, job posts naming tools, case studies
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source or tool count you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  spend_velocity:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Venture-backed, or revenue/headcount growth consistent with rising vendor and card spend.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      is venture-backed, or shows revenue/headcount growth consistent with
+      rising vendor and card spend.
+
+      Search: funding databases, press, headcount growth data
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
 CONTEXT_FIELDS: >-
   employee headcount, funding stage and most recent round date,
   industry, country/entity locations, number of detectable SaaS tools
   in the stack (vendor sprawl), current expense/card tool if any
   mentioned in job posts or press, and the L1 fit condition(s) that passed
+
+OFFER_TYPE_REASONING: >-
+  The finance function outgrows manual process because a
+  new leader or a raise forces the issue, not because Ramp's pitch
+  itself creates the need. Serves the sales-assisted segment that needs
+  a rep, not Ramp's own self-serve funnel for high-intent signups.
+
+SCOPE_EXCLUSIONS: |-
+  - Ramp's own self-serve motion ("high-intent users ready to
+    self-serve" per Ramp's site) — absorbed below the 50-employee floor,
+    not this spec.
+  - Companies over 5,000 employees with an entrenched Concur/Amex
+    agreement (see L0 `size_ceiling`).
+  - Existing Ramp customers are **not** excluded — no `existing_customer`
+    check exists yet in this spec, a known gap (see
+    `references/patterns.md` §2).

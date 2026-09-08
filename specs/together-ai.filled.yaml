@@ -1,57 +1,120 @@
-# Saved values for together-ai.yaml's {{CLAUDE:...}} judgment markers.
-# compile.py reads this automatically on every recompile — keyed by the
-# marker name used in scripts/compile.py's fill() calls. Delete a key
-# (or the whole file) to force that marker back to a blank template.
+# Hand-authored per-column build content for together-ai.yaml.
+# compile.py reads this automatically on every recompile, keyed by
+# check/fit-condition id under l0/l1, plus top-level markers (like
+# CONTEXT_FIELDS) for slots the templates can't fill deterministically.
+# Delete a key to force that column back to a {{CLAUDE:...}} marker.
 
-L0_PROMPTS: |
-  Claygent prompts, one per check:
+l0:
+  headcount_contraction:
+    inputs: /Headcount Growth 12mo
+    body: /Headcount Growth 12mo <= 0
 
-  `competing_supply`
-  ```
-  Determine whether {{company}} meets this condition:
-  sells or hosts inference, GPU capacity, or agent runtime infrastructure
-  (e.g. Docker, Modal, Baseten, Replicate, Fireworks, CoreWeave, AWS, GCP, Azure)
+  size_band:
+    inputs: /Employee Count
+    body: "OR(/Employee Count < 15, /Employee Count > 10000)"
 
-  Search: product pages, pricing pages, positioning
+  competing_supply:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      sells or hosts inference, GPU capacity, or agent runtime infrastructure
+      (e.g. Docker, Modal, Baseten, Replicate, Fireworks, CoreWeave, AWS, GCP, Azure)
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Search: product pages, pricing pages, positioning
 
-  `own_fleet`
-  ```
-  Determine whether {{company}} meets this condition:
-  trains on owned hardware, or is a frontier lab
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
-  Search: eng blog, research pages, datacenter announcements
+  own_fleet:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      trains on owned hardware, or is a frontier lab
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Search: eng blog, research pages, datacenter announcements
 
-  `hyperscaler_lockin`
-  ```
-  Determine whether {{company}} meets this condition:
-  multi-year public cloud partnership, co-selling agreement, or committed
-  enterprise spend with a provider that sells inference (e.g. AWS, Google
-  Cloud, Azure, Oracle Cloud)
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
-  Search: press releases, partner pages, cloud provider case studies
+  hyperscaler_lockin:
+    inputs: /Company Name, /Website
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      multi-year public cloud partnership, co-selling agreement, or committed
+      enterprise spend with a provider that sells inference (e.g. AWS, Google
+      Cloud, Azure, Oracle Cloud)
 
-  Return only: TRUE, FALSE, or UNKNOWN.
-  Return TRUE only with a specific source you can point to.
-  Return UNKNOWN when evidence is absent rather than guessing FALSE.
-  ```
+      Search: press releases, partner pages, cloud provider case studies
 
-  `size_band`
-  ```
-  Not a Claygent call — read directly off company enrichment (employee
-  count field). Disqualified = TRUE if headcount < 50 OR headcount > 10000.
-  No UNKNOWN state: missing enrichment data should pass through as FALSE,
-  same as any other L0 check with absent evidence.
-  ```
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+l1:
+  shipped_ai_feature:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Has a public API, dev-facing product, or marketed feature that visibly depends on a model — not just internal AI use.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      has shipped a feature or product that visibly depends on a language
+      or generative model — a public API, a developer-facing product, or a
+      marketed AI feature. "Uses AI internally" with no external product
+      surface does not count.
+
+      Search: product pages, docs, changelog, blog
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  model_vendor_stack:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Uses OpenAI, Anthropic, Pinecone, Weaviate, or a named Hugging Face org in its own stack.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      uses a named model or AI-infra vendor in its own stack — OpenAI,
+      Anthropic, Pinecone, Weaviate, or a Hugging Face org — visible in
+      docs, job posts, or engineering blog.
+
+      Search: docs, job posts, eng blog
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  open_weight_evidence:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Names an open-weight model (Llama, Mistral, Qwen, DeepSeek, Gemma) in docs, job posts, or blog.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      shows evidence of using an open-weight model — Llama, Mistral, Qwen,
+      DeepSeek, or Gemma — named in docs, job posts, or blog.
+
+      Search: docs, job posts, eng blog
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
+
+  volume_proxy:
+    cost: search
+    inputs: /Company Name, /Website
+    summary: Has usage-based pricing, a public API, or a dev-facing product implying real inference volume.
+    body: |
+      Determine whether {{Company Name}} meets this condition:
+      has a usage-based pricing page, a public API, or a dev-facing
+      product implying meaningful inference volume.
+
+      Search: pricing page, docs, product pages
+
+      Return only: TRUE, FALSE, or UNKNOWN.
+      Return TRUE only with a specific source you can point to.
+      Return UNKNOWN when evidence is absent rather than guessing FALSE.
 
 CONTEXT_FIELDS: >-
   employee headcount, industry, primary cloud provider, model vendor stack
@@ -59,3 +122,17 @@ CONTEXT_FIELDS: >-
   open-weight model evidence (Llama / Mistral / Qwen / DeepSeek / Gemma in
   docs or blog, if any), product surface (usage-based API or dev-facing
   product, if any), and the L1 fit condition(s) that passed
+
+OFFER_TYPE_REASONING: >-
+  Inference costs spike, an SLO breaks, or a fine-tune ships
+  and needs somewhere to run; none of that is created by Together AI's
+  pitch. Serves the sales-led reserved-capacity/Enterprise motion
+  specifically, not the self-serve pay-per-token funnel.
+
+SCOPE_EXCLUSIONS: |-
+  - Together's own self-serve, pay-per-token serverless motion — a
+    different funnel with no signal-based outbound need.
+  - Companies under 15 or over 10,000 employees (see L0 `size_band`).
+  - Existing Together AI customers are **not** excluded — no
+    `existing_customer` check exists yet in this spec, a known gap (see
+    `references/patterns.md` §2).

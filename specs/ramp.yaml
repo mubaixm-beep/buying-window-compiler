@@ -7,16 +7,23 @@ motion: >-
   a rep)
 
 sourcing:
-  description: >
-    Find companies with a finance function large enough to need more than
-    spreadsheets — a Controller, VP Finance, or dedicated accounting
-    headcount already in place or clearly forming. Mid-market and
-    lower-enterprise, US-headquartered or with a substantial US entity.
-    Any industry. Include both venture-backed and bootstrapped companies.
-  filters:
-    - 50-5,000 employees
-    - US or Western Europe entity
-    - any industry
+  # Single segment — no OR branches needed here.
+  segments:
+    - name: mid_market_companies
+      description: >
+        Companies with 50-5,000 employees, headquartered in the United
+        States, United Kingdom, Ireland, Germany, France, or the
+        Netherlands. Any industry. Include both venture-backed and
+        self-funded companies.
+      filters:
+        - 50-5,000 employees
+        - "country: United States, United Kingdom, Ireland, Germany, France, or Netherlands"
+        - any industry
+      # No existing_customer check exists for this spec (a known gap —
+      # see references/patterns.md §2), so there's no published-customer
+      # concentration to aim the ceiling below. Floor and ceiling
+      # already match L0's size_floor/size_ceiling exactly.
+      expected_row_count: 1,000-2,500
   deliberately_omitted:
     - check: competing_supply
       why: >
@@ -55,16 +62,23 @@ discovery:
   - What size does the Amex-plus-spreadsheet setup finally break?
 
 disqualify:
-  - id: competing_supply
-    kills: fintech, neobank, spend management, or corporate card issuer
-    examples: [Brex, Navan, Expensify, Airbase, Bill.com]
-    detect_via: product and pricing pages
+  - id: headcount_contraction
+    kills: 12-month headcount growth <= 0%
+    cost: free
+    note: >
+      Same Enrich Company call that returns employee count also returns
+      12-month growth — free once enrichment is already running. A
+      company shedding headcount is very likely under a procurement
+      freeze regardless of offer.
+    detect_via: company enrichment (Enrich Company payload)
   - id: geography
     kills: no entity in a supported country
+    cost: free
     detect_via: company enrichment
     note: verify current Ramp coverage before setting this
   - id: size_floor
     kills: under 50 employees, pre-revenue, negligible vendor spend
+    cost: free
     note: >
       Raised from an earlier 15-employee floor set against Ramp's whole
       market rather than this motion. Ramp's own site self-serves
@@ -75,9 +89,21 @@ disqualify:
     detect_via: company enrichment
   - id: size_ceiling
     kills: over 5000 employees with an entrenched Concur or Amex agreement
+    cost: search
+    note: >
+      The headcount half of this check is free, but "entrenched Concur
+      or Amex agreement" needs a press/case-study read — the compound
+      condition as a whole can't clear on enrichment alone, so it's
+      tagged at the cost of its more expensive half.
     detect_via: press releases, procurement mentions, case studies
+  - id: competing_supply
+    kills: fintech, neobank, spend management, or corporate card issuer
+    examples: [Brex, Navan, Expensify, Airbase, Bill.com]
+    cost: search
+    detect_via: product and pricing pages
   - id: contract_lock
     kills: public multi-year commitment to a competing platform
+    cost: search
     detect_via: case studies, logo pages, press
 
 fit:

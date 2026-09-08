@@ -137,25 +137,102 @@ Push past the obvious competitor list to:
 - **Self-serving** — built it internally, or runs their own fleet
 - **Wrong size** — below the budget floor, above the procurement moat
 - **Wrong shape** — services business with no product surface
+- **Contracting, not growing** — 12-month headcount growth ≤ 0% means a
+  procurement freeze regardless of offer (`headcount_contraction`, free
+  tier, every spec)
+
+**Before writing any `cheap` or `search` check, list what the Enrich
+Company payload already returns** — headcount, growth, industry,
+country, founded year, public status — and ask which of those alone
+would kill a row. Free kills first, always: a field enrichment is
+already paying for costs nothing extra to read, so every disqualifier
+answerable from that payload belongs at the `free` tier before a single
+description read or Claygent search gets written. `headcount_contraction`
+exists because this question wasn't asked before growth data specifically.
+
+**Order checks cheapest-first, not in the order you thought of them.**
+Each check chains on every previous one returning false — `Only run if`
+— so a row that a free field read would have killed should never reach
+a paid Claygent search. Tag every check's `cost`:
+
+1. `free` — a formula or enrichment-field read (a size band read
+   straight off company enrichment). No AI column.
+2. `cheap` — a description read (entity type, `wrong_shape`) — one AI
+   column classifying text Clay already has, no external search.
+3. `search` — a Claygent search: either narrow, against a known list
+   (`existing_customer`), or broad and open-ended (`competing_supply`,
+   a lock-in check). Both cost the same tag; list the narrow, known-list
+   searches before the broad ones in the yaml — compile.py preserves
+   your order within a tier, it doesn't distinguish narrow from broad
+   for you.
+
+`scripts/compile.py` orders the L0 table by `cost` automatically. An
+untagged check defaults to `search` — the most expensive tier — so a
+forgotten tag costs credits rather than silently jumping the queue.
 
 ### Step 5 — Write the sourcing prompt (L-1)
 
-Write `sourcing.description`: the plain-English paragraph that gets
-pasted into Clay's "describe what you'd like to do" box to build the
-unenriched list, before any L0–L5 column exists.
+Write `sourcing.segments`: one or more entries, each with its own
+plain-English prompt pasted into Clay's "describe what you'd like to
+do" box to build one unenriched list, before any L0–L5 column exists.
 
-**Sourcing filters are looser than L0 on purpose.** Only use filters
-that are free at list-build time — headcount, geography, industry,
-funding stage. Never pre-filter on anything L0 disqualifies. If sourcing
-already excludes what L0 would kill, the disqualifiers never fire, and
-there is no way left to tell whether L0 is doing anything. A slightly
-wide list is the point.
+**Never OR two segments into one prompt.** Clay's filter builder lets
+the loosest branch dominate an OR'd prompt — a "public companies, any
+industry" branch has pulled in entertainment, e-learning, and consumer
+software alongside the intended financial and healthcare targets, with
+nothing in the output flagging that it happened. If two populations
+need different logic — a lower headcount floor for a regulated
+industry, a higher one for "any industry but public" — that's two
+segments, each AND-only, not one prompt joined by "or." Build each
+segment as its own Clay list and run L0 on each separately before
+unioning the surviving rows into one table. This also produces a
+**per-segment kill rate** — which population is actually worth sourcing
+from, information one combined number would average away.
 
-Target a few hundred to a few thousand rows. L0 should then kill
-20–50% of them — under that and sourcing is too tight, over it and L0
-is too soft (or sourcing pulled the wrong population). Record anything
-sourcing deliberately leaves for L0 to catch, and why, in
-`deliberately_omitted`.
+**"Looser than L0" means which checks, not how precisely stated.**
+Sourcing skips the checks L0 exists to run — competing supply, existing
+customer, lock-in — because those need a Claygent read of product
+pages, press, and case studies, not a list-build filter. It does
+**not** mean the prompt itself can be vague. Every criterion that *is*
+in the prompt — headcount, geography, industry, funding stage — must be
+**concrete and mechanical**: an explicit employee range, named
+industries, named countries. Clay's filter builder parses the prompt
+text directly into filters; a hedge word ("large enough to,"
+"plausibly," "weighted toward") doesn't map to a number or a list, it
+maps to whatever the builder guesses — almost always broader than you
+meant. If a criterion can't be written as a number or a named list, it
+isn't a sourcing filter; it's an L0 check that hasn't been written yet.
+
+**Every segment needs an explicit ceiling, not just a floor.** An
+open-ended top end pulls in accounts no plausible motion targets and
+inflates the row count past anything L0 was sized for.
+
+**Set each segment's band against the client's own customer
+concentration.** Before picking numbers, check `existing_customer`'s
+named examples (or the regression set). If the client's published
+customers cluster in one segment — a handful of very large, famous
+logos — aim that segment's band *below* the concentration, not at it.
+Resourcing straight into it produces a list that's disproportionately
+already-customers, wasting L0 credits on `existing_customer` instead of
+finding net-new accounts.
+
+Write each segment's `expected_row_count` — what its Clay preview
+should show. If the actual preview comes back at more than 5x that
+number, the prompt is too loose; fix it before building anything on top
+of the list.
+
+**Verify the geography filter after every build, not just at write
+time.** Clay has silently expanded a single named country into a much
+larger list ("United States" applied as "United States +28 more") with
+nothing in the prompt or the description indicating it happened. Open
+each built list in the Clay UI and confirm the geography filter that
+actually applied matches what was typed.
+
+Target a few hundred to a few thousand rows per segment. L0 should then
+kill 20–50% of each — under that and that segment's sourcing is too
+tight, over it and L0 is too soft for that population (or sourcing
+pulled the wrong one). Record anything sourcing deliberately leaves for
+L0 to catch, and why, in `deliberately_omitted`.
 
 ### Step 6 — Write and compile the spec
 
@@ -167,9 +244,13 @@ differ on every input, which is the point.
 python3 scripts/compile.py specs/<client>.yaml
 ```
 
-Emits `output/<client>-build.md`. Fill the `{{CLAUDE:...}}` markers —
-Claygent prompt bodies and context fields, where template assembly can't
-do the work.
+Emits `output/<client>-build.md` — a numbered build sequence, not an
+explainer. Fill any remaining `{{CLAUDE:...}}` markers in
+`specs/<client>.filled.yaml`: each L0 check and L1 fit condition needs
+an `inputs` line and a `body` (the formula or Claygent prompt), keyed by
+its id under `l0:`/`l1:`; `CONTEXT_FIELDS` still feeds L5. L2 prompts,
+the L3 formula, and L4 are generated automatically from the spec's own
+structured fields — no hand-authoring needed there.
 
 ### Step 7 — Hand over the hypothesis as a question
 
@@ -246,6 +327,28 @@ source is what lets job-board data get counted twice.
 - **L5 must be able to say no.** Never write the conclusion into the
   prompt. A prompt ending "...creating an immediate need for X" produces
   identical rationales across unrelated accounts.
+- **Every L0 or L1 check must be answerable from a specific artifact
+  that either exists or doesn't.** Test it by asking: what page would
+  prove this? If the honest answer for nearly every company is
+  "obviously yes, but no page says so" — securityscorecard's original
+  `has_vendor_or_supply_chain_exposure` required condition asked
+  exactly this, and returned UNKNOWN on every row in a 10-row sandbox
+  test, gating `Fit` to false everywhere — the check will return
+  UNKNOWN forever and silently kill the whole build. Replace it with a
+  named-artifact version instead: a trust center, a supplier portal, a
+  10-K risk-factor mention, a case study, a job post naming a title.
+  Same fix pattern as `wrong_shape`.
+
+## Clay's UI changes
+
+The build doc names specific Clay actions (Formula, AI Column, Claygent,
+Enrich Company, Find Jobs at Company, Google Search, Score Row, HTTP
+API) and click paths (auto-run toggle, sandbox mode, `Review changes` →
+`Publish and don't Run`). Clay's UI moves. Any exact action name or
+click path in a generated doc may be stale by the time you're building.
+If something on screen doesn't match what the doc says, the *intent* is
+in the step — find the nearest equivalent action rather than assuming
+the doc is right and the product is wrong.
 
 ## Reference files
 

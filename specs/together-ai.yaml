@@ -7,18 +7,27 @@ motion: >-
   contracts, and VPC deployments — this spec targets the sales-led side)
 
 sourcing:
-  description: >
-    Find companies that build or ship AI-powered products or features —
-    not AI infrastructure vendors themselves. Include companies with a
-    public API, a developer-facing product, or any shipped feature that
-    visibly depends on a language or generative model, from early-stage
-    startups through mid-size scale-ups. US and international, any
-    industry, headquartered anywhere. Do not restrict by funding stage or
-    whether they've raised.
-  filters:
-    - 15-10,000 employees
-    - any industry, any country
-    - excludes pure hardware/semiconductor manufacturers
+  # Single segment — no OR branches needed here. If a future revision
+  # adds a second population (e.g. a lower floor for AI-native startups
+  # vs. a higher one for larger companies with an AI feature), split it
+  # into its own segment rather than OR-ing it into this one.
+  segments:
+    - name: ai_product_companies
+      description: >
+        Companies with 15-10,000 employees in the Artificial
+        Intelligence, Machine Learning, Developer Tools, or API/Platform
+        industry categories. Any country. Exclude the Semiconductors and
+        Computer Hardware industries.
+      filters:
+        - 15-10,000 employees
+        - "industry: Artificial Intelligence, Machine Learning, Developer Tools, or API/Platform"
+        - any country
+        - excludes Semiconductors and Computer Hardware industries
+      # No existing_customer check exists for this spec (a known gap —
+      # see references/patterns.md §2), so there's no published-customer
+      # concentration to aim the ceiling below. Ceiling matches L0's own
+      # size_band ceiling exactly.
+      expected_row_count: 800-1,500
   deliberately_omitted:
     - check: competing_supply
       why: >
@@ -60,22 +69,18 @@ discovery:
   - Do you win more often against a hyperscaler or against self-hosting?
 
 disqualify:
-  - id: competing_supply
-    kills: sells or hosts inference, GPU capacity, or agent runtime infrastructure
-    examples: [Docker, Modal, Baseten, Replicate, Fireworks, CoreWeave, AWS, GCP, Azure]
-    detect_via: product pages, pricing pages, positioning
-  - id: own_fleet
-    kills: trains on owned hardware, or is a frontier lab
-    detect_via: eng blog, research pages, datacenter announcements
-  - id: hyperscaler_lockin
-    kills: >
-      multi-year public cloud partnership, co-selling agreement, or
-      committed enterprise spend with a provider that sells inference
-    examples: [AWS, Google Cloud, Azure, Oracle Cloud]
-    note: BlackLine is a regression example this check should catch, not a provider
-    detect_via: press releases, partner pages, cloud provider case studies
+  - id: headcount_contraction
+    kills: 12-month headcount growth <= 0%
+    cost: free
+    note: >
+      Same Enrich Company call that returns employee count also returns
+      12-month growth — free once enrichment is already running. A
+      company shedding headcount is very likely under a procurement
+      freeze regardless of offer.
+    detect_via: company enrichment (Enrich Company payload)
   - id: size_band
     kills: under 15 employees, or over 10000 employees
+    cost: free
     note: >
       Floor lowered from an earlier 50-employee cut set against the
       whole company rather than this motion. Headcount is a weak proxy
@@ -88,6 +93,23 @@ disqualify:
       with nothing running yet. Ceiling unchanged: it's a backstop for
       own_fleet, not a motion-sizing decision.
     detect_via: company enrichment
+  - id: competing_supply
+    kills: sells or hosts inference, GPU capacity, or agent runtime infrastructure
+    examples: [Docker, Modal, Baseten, Replicate, Fireworks, CoreWeave, AWS, GCP, Azure]
+    cost: search
+    detect_via: product pages, pricing pages, positioning
+  - id: own_fleet
+    kills: trains on owned hardware, or is a frontier lab
+    cost: search
+    detect_via: eng blog, research pages, datacenter announcements
+  - id: hyperscaler_lockin
+    kills: >
+      multi-year public cloud partnership, co-selling agreement, or
+      committed enterprise spend with a provider that sells inference
+    examples: [AWS, Google Cloud, Azure, Oracle Cloud]
+    cost: search
+    note: BlackLine is a regression example this check should catch, not a provider
+    detect_via: press releases, partner pages, cloud provider case studies
 
 fit:
   required: shipped_ai_feature

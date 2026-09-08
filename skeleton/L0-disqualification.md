@@ -1,14 +1,7 @@
-## L0 — Disqualification
+## 2 — L0 Disqualification
 
-Runs first. Chain every downstream column with `Only run if
-Disqualified = false` so dead rows never cost credits.
+Runs first, cheapest-first. Each column gates on every previous one
+returning false, so a row a free field read would have killed never
+reaches a paid Claygent search. UNKNOWN passes through as false.
 
-{{DISQUALIFY_TABLE}}
-
-**Clay implementation:** one Claygent column per check, plus a formula
-column combining them into a single `Disqualified` boolean.
-
-{{L0_PROMPTS}}
-
-Treat UNKNOWN as pass-through, not as a kill. An absent signal is not
-evidence of absence.
+{{L0_CONTENT}}
