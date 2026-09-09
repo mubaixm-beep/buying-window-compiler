@@ -295,6 +295,40 @@ def l2_prompt(signal):
     return "\n".join(lines)
 
 
+def is_job_post_signal(signal):
+    """True for tier_a signals whose evidence is a specific job posting for
+    a specific role (a `titles` match) rather than a keyword/press search.
+    These decay differently: the posting can be filled and taken down
+    between L2 capture and L3 scoring, and — confirmed against a real
+    incident, not hypothetically — some ATS platforms (Ashby) serve a
+    removed posting's URL as HTTP 200 with an empty shell, rendering
+    "not found" only after JavaScript runs, while others (Greenhouse)
+    give the fetcher a real 404. A status-code check alone would catch
+    the second and silently miss the first."""
+    return bool(signal.get("titles"))
+
+
+def liveness_prompt(type_name, field):
+    return (
+        f"A prior check ({field}) found a job posting matching this role. "
+        f"Before this counts as evidence, confirm the posting is still "
+        f"live today — do not trust that the URL merely loads. Some ATS "
+        f"platforms return HTTP 200 for a removed posting (an empty page "
+        f"shell that only renders \"job not found\" after JavaScript "
+        f"runs), and a cached or search-indexed copy of the page can "
+        f"still show the full original listing as if it were live. Open "
+        f"the company's current careers/jobs listing directly — not a "
+        f"cached search result — and confirm this specific role still "
+        f"appears in it right now.\n"
+        f"Return TRUE only if you can confirm the role is still open as "
+        f"of today. Return FALSE if the posting is gone, filled, or the "
+        f"page shows \"not found\" / \"no longer accepting applications\" "
+        f"in any form — including a page that loads but shows no actual "
+        f"posting content. Return UNKNOWN only if the company's listing "
+        f"itself is unreachable."
+    )
+
+
 def l2_bullets(signal, field, show_tightness):
     bullets = []
     if show_tightness and signal.get("tightness"):
@@ -335,11 +369,25 @@ def render_l2_and_penalties(window, penalties):
         for i, s in enumerate(signals, 1):
             field = output_field("l2", s["type"])
             tier_fields[tier_key[-1]].append((field, s))
-            items.append(
+            entry = (
                 f"{i}. **{s['type']}** — {l2_action_label(s)}\n"
                 f"{l2_bullets(s, field, show_tightness)}\n\n"
                 f"   ```\n{indent(l2_prompt(s))}\n   ```"
             )
+            if tier_key == "tier_a" and is_job_post_signal(s):
+                live_field = f"{field}_live"
+                entry += (
+                    f"\n\n   **Liveness check** — `Claygent` (web search on)\n"
+                    f"   - Only run if: `{field} = \"TRUE\"`\n"
+                    f"   - Output: `{live_field}` → TRUE / FALSE / UNKNOWN\n\n"
+                    f"   ```\n{indent(liveness_prompt(s['type'], field))}\n   ```\n\n"
+                    f"   > A job-post-based Tier A signal decays faster than its "
+                    f"lookback window suggests — the role gets filled and the "
+                    f"posting comes down. This check is gated on the signal "
+                    f"above returning TRUE and feeds the L3 gate: `{field}` "
+                    f"only counts toward `tier_a_count` if `{live_field} = \"TRUE\"`."
+                )
+            items.append(entry)
         sections.append(f"### 4.{step_n} — Tier {label} signals ({desc})\n\n" + "\n\n".join(items))
         step_n += 1
 
@@ -372,10 +420,12 @@ def render_l2_and_penalties(window, penalties):
 
 # ----------------------------------------------------------------- L3 --
 
-def recency_expr(date_field, points, brackets):
+def recency_expr(date_field, points, brackets, live_field=None):
     expr = "0"
     for b in reversed(brackets):
         expr = f"IF(DAYS_SINCE({date_field}) <= {b['max_days']}, {points} * {b['multiplier']}, {expr})"
+    if live_field:
+        expr = f'IF({live_field} = "TRUE", {expr}, 0)'
     return expr
 
 
@@ -393,10 +443,15 @@ def render_l3(spec, tier_fields, penalty_fields):
     sc = {**DEFAULTS, **(spec.get("scoring") or {})}
     brackets = sc["recency"]
 
+    live_fields = [f"{f}_live" for f, s in tier_fields["a"] if is_job_post_signal(s)]
+
     table = ["| Criterion | Field Evaluated | Scoring |", "|---|---|---|"]
     if tier_fields["a"]:
+        live_note = (" (job-post signals additionally gated on their liveness check)"
+                      if live_fields else "")
         table.append(f"| Tier A | {', '.join(f'`{f}`' for f, _ in tier_fields['a'])} | "
-                      f"{sc['tier_a_points']} pts each, cap {sc['tier_a_cap']}, recency multiplier applies |")
+                      f"{sc['tier_a_points']} pts each, cap {sc['tier_a_cap']}, "
+                      f"recency multiplier applies{live_note} |")
     if tier_fields["b"]:
         table.append(f"| Tier B | {', '.join(f'`{f}`' for f, _ in tier_fields['b'])} | "
                       f"{sc['tier_b_points']} pts each, cap {sc['tier_b_cap']} |")
@@ -407,7 +462,11 @@ def render_l3(spec, tier_fields, penalty_fields):
         table.append(f"| Penalties | {', '.join(f'`{f}`' for f, _ in penalty_fields)} | "
                       f"{'; '.join(str(p['points']) + ' pts' for _, p in penalty_fields)} |")
 
-    a_terms = [recency_expr(f"/{f}_date", sc["tier_a_points"], brackets) for f, _ in tier_fields["a"]]
+    a_terms = [
+        recency_expr(f"/{f}_date", sc["tier_a_points"], brackets,
+                     live_field=f'/{f}_live' if is_job_post_signal(s) else None)
+        for f, s in tier_fields["a"]
+    ]
     a_sum = " +\n  ".join(a_terms) if a_terms else "0"
     b_terms = [f'IF(/{f} = "TRUE", {sc["tier_b_points"]}, 0)' for f, _ in tier_fields["b"]]
     b_sum = " + ".join(b_terms) if b_terms else "0"
@@ -415,7 +474,11 @@ def render_l3(spec, tier_fields, penalty_fields):
     c_sum = " + ".join(c_terms) if c_terms else "0"
     pen_terms = [f'IF(/{f} = "TRUE", {p["points"]}, 0)' for f, p in penalty_fields]
     pen_sum = " + ".join(pen_terms) if pen_terms else "0"
-    count_terms = [f'IF(/{f} = "TRUE", 1, 0)' for f, _ in tier_fields["a"]]
+    count_terms = [
+        (f'IF(AND(/{f} = "TRUE", /{f}_live = "TRUE"), 1, 0)' if is_job_post_signal(s)
+         else f'IF(/{f} = "TRUE", 1, 0)')
+        for f, s in tier_fields["a"]
+    ]
     count_sum = " + ".join(count_terms) if count_terms else "0"
 
     formula = f"""tier_a_subtotal = MIN({sc['tier_a_cap']},
@@ -436,6 +499,8 @@ Qualified = AND(tier_a_count >= 1, final_score >= {sc['threshold']})"""
 
     inputs = ", ".join(f"/{f}" for f, _ in
                         tier_fields["a"] + tier_fields["b"] + tier_fields["c"]) or "l2_* columns"
+    if live_fields:
+        inputs += ", " + ", ".join(f"/{f}" for f in live_fields)
     if penalty_fields:
         inputs += ", " + ", ".join(f"/{f}" for f, _ in penalty_fields)
 

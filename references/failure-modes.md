@@ -81,3 +81,46 @@ third. Hiring count is Tier C and it opens.
 **Fix:** L5 instruction to lead with the single strongest signal and its
 date. Cap length so filler ("1,903 employees and 14% growth", "scale to
 standardize AI infrastructure") gets squeezed out.
+
+## 7. A job posting was evidence, then it wasn't, and nothing noticed
+
+Opal spec, `first_iam_hire`: Primer.io's "IAM Engineer" posting
+(jobs.ashbyhq.com/primer.io/b7c9184a-a9a9-40ce-9751-f795f86beb03) was
+read in full and confirmed a genuine internal-access-governance hire —
+"standing up dedicated IAM," "access review and certification
+campaigns," the works. It qualified the account. On the next pass, the
+same URL returned "Job not found."
+
+The role had been filled — ordinary and expected for a signal whose
+`lookback_days` window is 90. What wasn't expected: the URL didn't 404.
+Ashby serves a removed posting as HTTP 200 with an empty client-rendered
+shell — the embedded page data shows `"posting":null`, and "Job not
+found" only appears after JavaScript runs. A raw fetch, or a search
+engine's cached/indexed copy of the page, still shows the *original*
+full posting content, with nothing marking it stale. Cross-checked
+against Greenhouse: a removed job there returns a real, honest 404
+(`{"status":404,"error":"Job not found"}`) via its own posting API. Two
+ATS platforms, two completely different "this is gone" signatures — a
+check that only reads the HTTP status code catches one and misses the
+other, silently.
+
+**Symptom:** a qualified row's strongest (or only) Tier A evidence is a
+role that closed between capture and scoring, and nothing in the pipeline
+flags it. The lookback window looks like it's doing the job — 90 days is
+"recent" — but a job post can die in days, not months.
+
+**Fix:** `compile.py` now auto-generates a liveness-check column for
+every tier_a signal keyed on `titles` (any hire-type signal), gated on
+the capture column returning TRUE, and wires it into the L3 gate — the
+signal only counts toward `tier_a_count`, and only earns points, if the
+liveness check also returns TRUE. The check instructs reading the
+company's *current* careers/jobs listing directly, not trusting that a
+URL loads and not trusting search-result/cache content, because the
+Ashby incident is proof both of those are exactly where the stale
+version survives. See `references/schema.md`'s note on the `titles`
+field for the mechanism, and `specs/opal.yaml`'s regression block
+(`primer.io`, expect `NO_WINDOW` at `l2_first_iam_hire_live`) for this
+exact case preserved as a poison pill. Not yet extended to tier_b/tier_c
+hire signals — they don't gate `Qualified`, so a stale hit there dilutes
+score rather than wrongly opening the gate. Revisit if one causes a bad
+row.

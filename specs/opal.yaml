@@ -1,0 +1,413 @@
+client: opal
+offer: >-
+  AI-native identity governance and access control platform (OpalQuery for
+  visibility, OpalScript for policy-as-code, Paladin for AI-driven
+  approval/revocation) governing humans, service accounts, and AI agents.
+  Paladin launched March 19 2026 as the anchor of what Opal now markets as
+  "the industry's first platform to See, Encode, and Enforce governance
+  with AI" — AI-agent identity governance has moved from a feature
+  mentioned alongside human/non-human governance to the company's
+  headline pitch; see the comment above window.tier_a's
+  ai_agent_production_deployment entry below.
+motion: >-
+  single sales-assisted enterprise motion — no self-serve signup, pricing,
+  or free tier exist; every CTA is "book a demo." There is no self-serve
+  segment to carve out the way ramp/figma/snyk had to; the whole company
+  sells through one demo-gated, security-team-led motion.
+
+sourcing:
+  # Single segment — Opal's customer base (Databricks, Chronosphere, Blend,
+  # Mercari, Sophos, Valon, CoinList, Grammarly, Notion, Cloudflare, Scale AI,
+  # CoreWeave, xAI, Superhuman, Elastic, Merge — full list in L0
+  # existing_customer below) spans ~75 to several-thousand employees with
+  # no clean industry split, so one AND-only band covers it rather than
+  # forcing an artificial segment boundary.
+  segments:
+    - name: venture_backed_tech_companies
+      description: >
+        Companies with 75-5,000 employees, headquartered in the United
+        States, Canada, or the United Kingdom, in the software, financial
+        technology, or artificial intelligence industries. Include both
+        venture-backed and private-equity-backed companies.
+      filters:
+        - 75-5,000 employees
+        - "country: United States, Canada, or United Kingdom"
+        - "industry: software, financial technology, or artificial intelligence"
+      # CoinList (74 employees) is Opal's smallest publicly named customer —
+      # floor set just above it. Ceiling matches L0 size_ceiling.
+      expected_row_count: 1,500-3,000
+  deliberately_omitted:
+    - check: competing_supply
+      why: >
+        Whether a company is itself an IGA/IAM/PAM vendor (SailPoint,
+        Saviynt, ConductorOne, Veza, Zluri, Lumos, Okta, CyberArk,
+        BeyondTrust) is a product-page read, not a filter Clay can apply
+        for free at list-build time.
+    - check: iga_lockin
+      why: >
+        A recent, large SailPoint/Saviynt/Okta IGA implementation only
+        surfaces in press releases, case studies, or job posts describing
+        an ongoing rollout — sourcing can't distinguish "just implemented a
+        competitor" from "never implemented anything" without a Claygent
+        read.
+    - check: existing_customer
+      why: >
+        Opal's own customer list isn't a filter Clay's list-builder can
+        apply — it needs a named-list Claygent check against Opal's
+        published customer/case-study page.
+    - check: wrong_shape
+      why: >
+        Whether a company has enough distinct systems and identities
+        (human, service account, AI agent) to make access governance a
+        real problem — versus a small team on a handful of SaaS tools with
+        nothing to govern — needs a description/infra read, not a filter.
+
+intake:
+  offer_type: readiness
+  buying_event_hypothesis: >
+    The company's identity surface outgrows manual, spreadsheet- or
+    native-IdP-based access management — usually because (1) a
+    security-sensitive enterprise, fintech, or AI-lab customer's
+    procurement/vendor-security review starts blocking a deal on access
+    controls (Chronosphere's own case study: "Opal Unblocked Larger Deals
+    for Chronosphere by Protecting Sensitive Customer Data on GCP" — AI
+    frontier labs and financial-services prospects specifically drove the
+    evaluation), or (2) the company starts deploying AI agents with
+    production access and realizes those agents need to be governed as
+    identities, not exceptions (Opal's own June 2026 Series C messaging:
+    "agents will multiply faster than any identity before them" — Mercari
+    VP Security). Both are readiness triggers — an external event
+    (a blocked deal, an agent rollout) forces the timing, not Opal's pitch.
+  hypothesis_confidence: inferred
+  hypothesis_evidence: >
+    Drawn from Opal's own published customer stories (Chronosphere,
+    Databricks, Mercari) and its own Series C positioning, both of which
+    are selected by Opal to read as clean trigger narratives — this is
+    pattern-matching across curated case studies and a funding
+    announcement, not a verified sales-cycle account. Only Chronosphere's
+    page states the trigger explicitly (a specific blocked-deal moment);
+    the AI-agent trigger is inferred from company-level positioning, not
+    from a named customer's before-state. That said, the AI-agent side of
+    the hedge has gotten more direct evidence since this spec was first
+    drafted, not less: Paladin's March 19 2026 launch — Opal's own
+    "industry's first platform to See, Encode, and Enforce governance
+    with AI" framing — plus the June 4 2026 press release's explicit
+    mechanism claim (agents "leveraging the standing, over-scoped
+    credentials of users") make this Opal's current headline pitch, not
+    a secondary use case. Still `inferred`, not `corroborated` — it's all
+    still Opal's own single-source marketing, not three independent
+    accounts — but it's a stronger, more specific version of the same
+    inference than "agents will multiply faster than any identity before
+    them" was on its own.
+  signal_surface: [case_studies, job_posts, funding_news, compliance_certs,
+                    press, product_launches]
+  window_length: few months
+  purchase_owner: CISO / VP Security / Head of IT or Identity
+  demand_noun: identity governance / access control need
+
+discovery:
+  - Between "a customer's security review blocked a deal" and "we're
+    deploying AI agents and realized we have no way to govern their
+    access," which trigger actually dominates the pipeline, and does one
+    predict a larger deal than the other?
+  - When a prospect's driver is a blocked enterprise deal, is the signal
+    visible before the deal (a new enterprise/regulated logo announcement,
+    a SOC 2 Type II push) or only after Opal is already in the deal?
+  - What size company does the native IdP (Okta/Entra native groups,
+    manual Google Workspace admin) stop being sufficient at — is 75
+    employees too low a floor, or does it vary sharply by industry
+    (fintech/healthcare needing this earlier than generic SaaS)?
+  - How much of the pipeline is landing where a competing IGA tool
+    (SailPoint, Saviynt, Okta Identity Governance) is being actively
+    displaced vs. where nothing existed before?
+  - Now that Paladin (launched March 2026) is the headline pitch, is the
+    AI-agent trigger actually converting deals faster than the
+    blocked-deal trigger, or is it winning attention in marketing without
+    yet winning pipeline — i.e. is L2 tier_a weighting (both currently
+    equal-weighted at 40 points) still right, or should
+    ai_agent_production_deployment count for more?
+
+disqualify:
+  - id: headcount_contraction
+    kills: 12-month headcount growth <= 0%
+    cost: free
+    note: >
+      Same Enrich Company call that returns employee count also returns
+      12-month growth — free once enrichment is already running. A company
+      shedding headcount is very likely under a procurement freeze
+      regardless of offer.
+    detect_via: company enrichment (Enrich Company payload)
+  - id: size_floor
+    kills: under 75 employees, or no dedicated security/IT function
+    cost: free
+    note: >
+      CoinList — 74 employees — is Opal's smallest publicly named
+      customer, in a regulated (crypto) vertical. 75 is a starting
+      estimate for the motion's real floor; confirm via discovery whether
+      it should drop lower for regulated industries the way
+      securityscorecard's floor does (500/100 conditional split).
+    detect_via: company enrichment
+  - id: competing_supply
+    kills: is itself an identity governance, IAM, PAM, or IGA vendor
+    examples: [SailPoint, Saviynt, ConductorOne, Veza, Zluri, Lumos, Okta,
+               CyberArk, BeyondTrust, One Identity, Britive]
+    cost: search
+    detect_via: product and pricing pages
+  - id: existing_customer
+    kills: already an Opal customer
+    examples: [Databricks, Chronosphere, Blend, Mercari, Sophos, Valon,
+               CoinList, Grammarly, Notion, Cloudflare, Scale AI, CoreWeave,
+               xAI (named "SpaceXAI" post-acquisition), Superhuman, Elastic,
+               Merge]
+    cost: search
+    note: >
+      Confirmed against Opal's June 4 2026 funding/leadership press
+      release (opal.dev/media-press/opal-security-raises-23m-new-leadership),
+      which added Notion, Cloudflare, Scale AI, CoreWeave, xAI (listed as
+      "SpaceXAI" — SpaceX acquired xAI Feb 2026, so Opal's own materials
+      now name the combined entity), Superhuman, Elastic (named
+      testimonial from CISO Mandy Andress), and Merge (named testimonial
+      from CTO Gil Feig) to the customer list beyond what the customers
+      page alone showed. A named executive testimonial is stronger
+      evidence than a bare logo — weight those two accordingly if this
+      check ever needs a confidence tier.
+    detect_via: Opal's published customer/case-study page, press releases
+  - id: size_ceiling
+    kills: over 5000 employees with an entrenched enterprise SailPoint or
+      Saviynt deployment
+    cost: search
+    note: >
+      The headcount half is free; "entrenched deployment" needs a
+      press/case-study read, so the compound condition is tagged at the
+      cost of its more expensive half. Large enterprises are not
+      categorically excluded — only ones already deep into a competing
+      platform (see `iga_lockin`, which covers the general case; this
+      ceiling exists because bigness correlates with an entrenched
+      multi-year IGA contract specifically). Listed after the two
+      narrow, known-list search checks (competing_supply,
+      existing_customer) per schema.md's cost-tier ordering guidance —
+      this one and iga_lockin below are broader, open-ended searches.
+    detect_via: press releases, procurement mentions, case studies
+  - id: iga_lockin
+    kills: public evidence of a recent (within 18 months), large-scale
+      SailPoint, Saviynt, or Okta Identity Governance implementation
+    cost: search
+    note: >
+      Enterprise IGA rollouts run 6-18 months and lock in multi-year
+      contracts the way SailPoint/Saviynt implementations do industry-wide
+      — a company mid-rollout or freshly live on a competitor is not
+      switching on the strength of a few job posts. No citable regression
+      example yet for this spec (same gap noted in patterns.md for snyk
+      and securityscorecard's lock-in checks) — flag for discovery.
+    detect_via: press releases, case studies, job posts describing an
+      active rollout, systems-integrator announcements
+  - id: wrong_shape
+    kills: no material distinct-identity surface — a small team on a
+      handful of native-SaaS admin panels with nothing approaching
+      dozens of systems, service accounts, or infrastructure roles to
+      govern
+    cost: cheap
+    detect_via: company description, engineering headcount, product surface
+
+fit:
+  required: identity_surface_exists
+  any_of:
+    - regulated_or_enterprise_customer_base
+    - deploying_ai_agents_with_system_access
+
+window:
+  tier_a:
+    - type: enterprise_deal_blocked_by_security_review
+      tightness: tight
+      implies: >
+        A company publicly describing a lost or stalled deal, a new
+        security questionnaire requirement, or a new SOC 2 Type II /
+        ISO 27001 certification pursued specifically to close
+        enterprise/regulated customers is in the exact situation
+        Chronosphere's own case study describes as Opal's entry point —
+        the company has no discretion over the timing once a real deal is
+        on the line.
+      terms: [SOC 2 Type II, ISO 27001, security questionnaire, vendor
+              security review, enterprise readiness, security review
+              blocking]
+      lookback_days: 120
+    # Centrality check (2026-06 press release + Paladin's March 19 2026
+    # launch, "the industry's first platform to See, Encode, and Enforce
+    # governance with AI"): this signal is now Opal's headline pitch, not
+    # a secondary use case alongside human/non-human governance the way
+    # it read when this spec was first drafted — see the `offer` field
+    # above. That changes how prominently this signal should surface in
+    # L4/L5 write-ups and in the sourcing/discovery conversation. It does
+    # NOT change the tightness call below: vendor narrative centrality
+    # and causal tightness are different axes. Conflating them would be
+    # the same mistake patterns.md warns against for funding-based
+    # signals (money is fungible and stays medium no matter how hard a
+    # vendor markets a raise). Do not add a `note:` key alongside
+    # `implies:` on a tier_a/tier_c signal — compile.py's l2_prompt()
+    # uses `note` (if present) to override the opening "shows evidence
+    # of: ..." line of the actual Claygent prompt regardless of
+    # `implies`, so a documentation-only note like this one would leak
+    # into the compiled prompt sent to Clay. Confirmed by compiling this
+    # exact change before reverting it to a comment.
+    - type: ai_agent_production_deployment
+      tightness: medium
+      implies: >
+        A company publicly announcing AI agents with access to production
+        systems, customer data, or internal tooling has just created a new
+        class of non-human identity that its existing IdP/native access
+        controls were not built to govern. Opal's own June 4 2026 press
+        release states the mechanism directly, not just the outcome: AI
+        agents are being deployed "leveraging the standing, over-scoped
+        credentials of users" — i.e. the default failure mode is agents
+        inheriting a human's existing permissions wholesale, not getting
+        scoped credentials of their own. That's a sharper causal chain
+        than "agents exist, therefore governance eventually matters," but
+        it still doesn't clear the tight bar: plenty of companies deploy
+        agents this way for a long stretch before anyone treats it as a
+        problem worth buying a platform for — the urgency is Opal's
+        diagnosis of the failure mode, not yet a forced timing event for
+        the prospect. Stays medium.
+      terms: [AI agents in production, agentic workflows, autonomous
+              agents accessing, agent access controls, non-human identity,
+              standing over-scoped credentials, agent identity]
+      lookback_days: 90
+    - type: first_iam_hire
+      tightness: tight
+      implies: >
+        A company's first dedicated internal access-governance hire
+        exists to make exactly the build-vs-buy call this category
+        requires — the role has no other mandate yet, the same
+        reasoning securityscorecard's first_tprm_hire and snyk's
+        first_appsec_hire rest on. Title alone is not sufficient — "IAM
+        Engineer" and "Identity & Access Management" cover two
+        unrelated jobs, and only one is Opal's buyer. Read the job
+        description body, not just the title. (a) Internal access
+        governance — who at the company (employees, contractors,
+        service accounts) can reach which internal systems — is Opal's
+        buyer. (b) Customer-facing auth engineering — the product's own
+        OAuth2/OIDC login path, an API auth gateway, token or session
+        strategy — is not; it is evidence of a build decision already
+        made, not a buy signal. Exclude any posting whose body is
+        dominated by API gateway, OAuth2/OIDC implementation, token
+        strategy, mTLS, session management, or edge-latency language.
+        Sezzle's "Principal Software Engineer - Identity & Access
+        Management" posting is exactly this excluded type — API auth
+        gateway in Golang, Envoy, edge latency budgets, "we build what
+        we can before buying" — and must not be counted as TRUE.
+      terms: [employee access, contractor access, joiner-mover-leaver,
+              access review, access certification, least privilege,
+              provisioning, deprovisioning, entitlements, SOX access
+              controls, SOC 2 access controls, IGA, PAM, standing access,
+              just-in-time access, JIT]
+      titles: [Identity and Access Management Engineer, IAM Engineer,
+               Identity Security Engineer, Head of Identity,
+               Director of Identity and Access Management,
+               Access Governance Lead]
+      excluded: [Security Engineer, IT Administrator, DevOps Engineer]
+      lookback_days: 90
+  tier_b:
+    - type: security_leadership_hire
+      note: >
+        tier_b, not tier_a — a new CISO or VP Security has many plausible
+        first priorities (network security, appsec, incident response)
+        before access governance specifically; less concentrated than
+        first_iam_hire, matching the leadership_hire/leadership-hire-family
+        reasoning in patterns.md §3 (causal density of the title, not the
+        title itself, decides the tier).
+      titles: [CISO, VP Security, Head of Security, VP Information Security]
+      lookback_days: 90
+    - type: iga_job_keywords
+      note: >
+        generic identity/access vocabulary a security team could post for
+        many reasons (SSO rollout, MFA project) — same reasoning as
+        snyk's devsecops_job_keywords and securityscorecard's
+        vendor_risk_job_keywords, both tier_b.
+      terms: [access reviews, joiner mover leaver, least privilege,
+              access certification, entitlement management, user access
+              review, UAR]
+      lookback_days: 90
+    - type: m_and_a_or_ipo_prep
+      note: >
+        named directly on Opal's own site as a trigger ("M&A or IPO
+        preparation"), but M&A/IPO prep touches dozens of workstreams —
+        access governance is one of many, not the concentrated cause.
+      lookback_days: 120
+    - type: recent_breach_or_incident
+      note: >
+        a company disclosing a security incident often responds with a
+        broad program review, of which access governance is one piece —
+        medium-strength, not self-proving on its own.
+      lookback_days: 180
+  tier_c:
+    - type: general_headcount_growth
+    - type: general_security_hiring_volume
+
+penalty:
+  - trigger: >
+      published case study, logo placement, or press mention naming
+      SailPoint, Saviynt, ConductorOne, Veza, Zluri, or Lumos as the
+      company's current or recently-selected access governance platform
+    lookback_months: 18
+    points: -30
+
+scoring:
+  threshold: 55
+
+regression:
+  - account: sailpoint.com
+    expect: DISQUALIFIED
+    at_layer: competing_supply
+  - account: databricks.com
+    expect: DISQUALIFIED
+    at_layer: existing_customer
+  - account: chronosphere.io
+    expect: DISQUALIFIED
+    at_layer: existing_customer
+    note: already a named Opal customer — the trigger hypothesis's own source account
+  - account: sezzle.com
+    expect: NO_WINDOW
+    at_layer: l2_first_iam_hire
+    note: >
+      Passes L0/L1 cleanly (legitimate BNPL fintech, no disqualifiers
+      fire) but its only surface-level tier_a hit is a "Principal
+      Software Engineer - Identity & Access Management" posting that is
+      customer-facing auth engineering (API auth gateway in Golang,
+      Envoy, edge latency budgets), not internal access governance.
+      l2_first_iam_hire must return FALSE for this account — if it
+      returns TRUE, the exclusion language in window.tier_a.first_iam_hire
+      has regressed. With no other tier_a signal, tier_a_count should
+      stay 0 and the row should never reach Qualified, let alone L4/L5.
+  - account: primer.io
+    expect: NO_WINDOW
+    at_layer: l2_first_iam_hire_live
+    note: >
+      Real incident, not hypothetical: Primer.io's "IAM Engineer" posting
+      (jobs.ashbyhq.com/primer.io/b7c9184a-a9a9-40ce-9751-f795f86beb03)
+      was a genuine internal-access-governance hire when this spec's
+      account research first ran, confirmed by reading the actual job
+      description. By the next check it returned "Job not found" —
+      Ashby serves HTTP 200 with an empty page shell for a removed
+      posting rather than a real 404, and cached/indexed copies of the
+      page still showed the full original content. l2_first_iam_hire_live
+      must return FALSE for this account once the role is gone — if it
+      returns TRUE, the liveness check is trusting a cached view instead
+      of the company's current listing. With no other tier_a signal,
+      tier_a_count should fall back to 0 and the row should never reach
+      Qualified. This is the account that motivated adding the liveness
+      check to every titles-based tier_a signal in compile.py, not just
+      this spec's first_iam_hire — see references/failure-modes.md.
+  - account: xai.com
+    expect: DISQUALIFIED
+    at_layer: existing_customer
+    note: >
+      Resolves the open caveat from the earlier account-research pass,
+      which flagged xAI's SpaceX ownership (Feb 2026 acquisition) as a
+      reason to double-check whether it still buys independently.
+      Moot: Opal's own June 4 2026 press release names "SpaceXAI" as a
+      current customer — the combined entity, not a prospect. xAI's
+      Greenhouse board (job-boards.greenhouse.io/xai) still posts under
+      the standalone "xai" slug and was still live-posting a Senior IAM
+      Engineer role as of this spec's last account-research pass — a
+      reminder that a live first_iam_hire signal does not override an
+      existing_customer hit; existing_customer must still fire first in
+      the L0 chain regardless of what L2 would otherwise show.

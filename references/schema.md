@@ -93,7 +93,7 @@ window:                     # L2 — time-bound, decays
       tightness: tight      # tight | medium | loose — see research.md
       implies: >            # "a company does X only when Y"
       terms: []             # for keyword types
-      titles: []            # for hire types
+      titles: []            # for hire types — see liveness note below
       excluded: []          # titles too universal to be causal
       lookback_days: 90
   tier_b: []                # supporting
@@ -125,6 +125,28 @@ regression:                 # poison pills + expected survivors
 ```
 
 ## Notes
+
+**Any tier_a signal with `titles` set automatically gets a liveness
+check — you don't write this, `compile.py` generates it.** A hire-type
+signal's evidence is one specific job posting, and postings come down
+once the role is filled — often well inside the signal's own
+`lookback_days` window. `compile.py` inserts a companion Claygent column
+(`l2_<type>_live`) right after the signal's own capture column, gated on
+that column returning TRUE, and wires it into L3: the signal only counts
+toward `tier_a_count` (and only earns points) if its liveness check also
+returns TRUE. See `references/failure-modes.md` #7 for the incident that
+motivated this — a real posting (Primer.io's, in the opal spec) went
+from open to closed between one research pass and the next, and the
+platform serving it (Ashby) returned HTTP 200 for the removed posting
+rather than a real 404, so a naive "does the URL 404" check would have
+missed it.
+
+This applies only to `titles`-based tier_a signals, not `terms`-only
+ones (a keyword/press search across multiple possible sources doesn't
+decay the same way a single posting URL does) and not to tier_b/tier_c
+(they don't gate `Qualified`, so a stale hit there dilutes score rather
+than wrongly opening the gate — a real gap, just a smaller one; worth
+revisiting if a tier_b hire signal ever causes a bad row).
 
 **Never OR two segments into one prompt.** Clay's filter builder lets
 the loosest branch dominate an OR'd prompt — a "public companies, any
